@@ -1,24 +1,26 @@
-简介
-angular版本迭代非常之快速，目前已经更新到了angular5版本，因为本次实战项目在是基于angular4来搭建的，所以项目版本环境是以angular4基础来搭建的，后期可以进行更新。
+# 简介
 
-目录
-angular所需搭建的环境
-几个比较常用的命令
-几种常见的API测试工具
-搭建所碰到的问题
-开始第一个HelloWorld
-angular所需搭建的环境
-1.nodejs下载，进行下载安装。 
-2. 安装vsCode 下载。 
-3. 利用npm i -g @angular/cli （脚手架工具），完成一些繁琐的初始化工作。
+>`angular版本迭代非常之快速，目前已经更新到了angular5版本，因为本次实战项目在是基于angular4来搭建的，所以项目版本环境是以angular4基础来搭建的，后期可以进行更新。`
 
-查看是否安装成功： 
+# 目录
+>1. angular所需搭建的环境
+>2. 几个比较常用的命令
+>3. 几种常见的API测试工具
+>4. 搭建所碰到的问题
+>5. 开始第一个HelloWorld
 
+# angular所需搭建的环境
+1.nodejs[下载](https://nodejs.org/en/)，进行下载安装。  
+2. 安装vsCode [下载](https://code.visualstudio.com/)。  
+3. 利用npm i -g @angular/cli （脚手架工具），完成一些繁琐的初始化工作。  
+
+查看是否安装成功：   
+![](https://img-blog.csdn.net/20180329143230413?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3hpYWp1bjIzNTYwMzM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70 "angular-cli安装成功")
 
 注：由于国内网络环境问题我们可以做一下方案：
 
-npm 设置淘宝镜像 : npm config set registry “https://registry.npm.taobao.org/”
-cnpm和yarn作为替代的包管理工具。安装cnpm命令：npm i -g cnpm。
+>`1. npm 设置淘宝镜像 : npm config set registry “https://registry.npm.taobao.org/”`  
+>`2. cnpm和yarn作为替代的包管理工具。安装cnpm命令：npm i -g cnpm。`  
 几个常用的命令
 npm i –save 包名：软件依赖 npm i –save-dev 包名：开发依赖。
 ng new 项目名：新建Angular项目
