@@ -50,29 +50,29 @@ Mock Rest API
 
 # 开始第一个HelloWorld
 1.使用ng new HelloWorld   
- ![](https://github.com/attrans/job-learning/blob/master/angular/images/ng%20new%20HelloWorld.png "ng new HelloWorld")
-文件目录结构： 
- ![](https://github.com/attrans/job-learning/blob/master/angular/images/angular%E5%B7%A5%E4%BD%9C%E5%8C%BA%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84.png "angular工作区文件目录结构")
+ ![](https://github.com/attrans/job-learning/blob/master/angular/images/ng%20new%20HelloWorld.png "ng new HelloWorld")  
+文件目录结构：  
+ ![](https://github.com/attrans/job-learning/blob/master/angular/images/angular%E5%B7%A5%E4%BD%9C%E5%8C%BA%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84.png "angular工作区文件目录结构")  
 
 2.对项目结构主要内容解释如下：
 
-` 1 e2e ------------------------------用于自动化测试
- 2 node_modules------------------存放依赖包的地方
- 3 src--------------------------------存放源代码
- 4   app----------------------------根模块
- 5          app.component.css------样式文件
- 6　　　app.component.html---模板
- 7　　　app.component.spec.ts-测试
- 8　　　app.component.ts-------组件
- 9　　　app.module.ts------------模块
-10   environments----------------环境
-11　　　environment.prod.ts----生产环境
-12　　　environment.ts----------非生产环境
-13   index.html-------------------宿主页面
-14   mian.ts-----------------------程序引导
-15   tsconfig.json-----------------编译配置
-16  angular-cli.json--------------angular-cli配置
-17    package.json----------------依赖包以及npm的命令`
+` 1 e2e ------------------------------用于自动化测试`  
+` 2 node_modules------------------存放依赖包的地方`  
+` 3 src--------------------------------存放源代码`  
+` 4   app----------------------------根模块`  
+` 5          app.component.css------样式文件`  
+` 6　　　app.component.html---模板`  
+` 7　　　app.component.spec.ts-测试`  
+` 8　　　app.component.ts-------组件`  
+` 9　　　app.module.ts------------模块`  
+`10   environments----------------环境`  
+`11　　　environment.prod.ts----生产环境`  
+`12　　　environment.ts----------非生产环境`  
+`13   index.html-------------------宿主页面`  
+`14   mian.ts-----------------------程序引导`  
+`15   tsconfig.json-----------------编译配置`  
+`16  angular-cli.json--------------angular-cli配置`  
+`17    package.json----------------依赖包以及npm的命令`  
 
 3.运行程序 ng serve 在浏览器上输入localhost:4200 
  ![](https://github.com/attrans/job-learning/blob/master/angular/images/ng%20serve%20welcome.png "ng serve welcome")
