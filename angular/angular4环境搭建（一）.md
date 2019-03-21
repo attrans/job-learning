@@ -15,7 +15,7 @@
 3. 利用npm i -g @angular/cli （脚手架工具），完成一些繁琐的初始化工作。  
 
 查看是否安装成功：   
-![](https://img-blog.csdn.net/20180329143230413?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3hpYWp1bjIzNTYwMzM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70 "angular-cli安装成功")
+![](https://github.com/attrans/job-learning/blob/master/angular/images/angular-cli%E5%AE%89%E8%A3%85%E6%88%90%E5%8A%9F.png "angular-cli安装成功")
 
 注：由于国内网络环境问题我们可以做一下方案：
 
