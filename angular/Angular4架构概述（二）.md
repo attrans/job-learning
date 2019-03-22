@@ -35,8 +35,6 @@ providers 当前组件所需的依赖注入提供商的数据
 ``` TypeScript
   template : `<h1>hello</h1>
                <div>...</div>`
-1
-2
 ```
 ## angular服务分析
 angular把组件和服务给分离开是为了程序更好的扩展性，以及复用性，服务由装饰器@Injectable修饰。
