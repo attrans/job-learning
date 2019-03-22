@@ -1,0 +1,82 @@
+<div class="container" style="margin-top: 20px;">
+  <div class="panel panel-default">
+    <div class="panel-heading">All persons data</div>
+    <table class="table" *ngIf="persons">
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>Name</th>
+          <th>Surname</th>
+          <th>Age</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let person of persons">
+          <td>{{person.id}}</td>         
+          <td>{{person.name}}</td>
+          <td>{{person.surname}}</td>
+          <td>{{person.age}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <button (click)="exportToExcel()" class="btn btn-primary">Export to excel</button>
+</div>
+
+
+<!-- <div ng-app="app" ng-controller="Ctrl">
+   
+    <table class="table table-bordered table-hover table-condensed">
+      <tr style="font-weight: bold">
+        <td style="width:35%">Id</td>
+        <td style="width:20%">Name</td>
+        <td style="width:20%">Surname</td>
+        <td style="width:25%">Age</td>
+        <td style="width:25%">Edit</td>
+      </tr>
+      
+      <tr *ngFor="let person of persons">
+        <td>
+          
+          <span editable-text="person.id" e-name="id" e-form="rowform" e-required>
+            {{ person.id || 'empty' }}
+          </span>
+        </td>
+        <td>
+          
+          <span editable-text="person.name" e-name="name" e-form="rowform">
+             {{ person.name || 'empty' }}
+          </span>
+        </td>
+        <td>
+          
+          <span editable-text="person.surname" e-name="surname" e-form="rowform">
+             {{ person.surname || 'empty' }}
+          </span>
+        </td>
+        <td>
+          
+          <span editable-text="person.age" e-name="age" e-form="rowform">
+              {{ person.age || 'empty' }}
+          </span>
+        </td>
+        <td style="white-space: nowrap">
+          
+          <form editable-form name="rowform" ng-show="rowform.$visible" class="form-buttons form-inline" shown="inserted == user">
+            <button type="submit" ng-disabled="rowform.$waiting" class="btn btn-primary">
+              save
+            </button>
+            <button type="button" ng-disabled="rowform.$waiting" ng-click="rowform.$cancel()" class="btn btn-default">
+              cancel
+            </button>
+          </form>
+          <div class="buttons" ng-show="!rowform.$visible">
+            <button class="btn btn-primary" ng-click="rowform.$show()">edit</button>
+            <button class="btn btn-danger" ng-click="removeUser($index)">del</button>
+          </div>  
+        </td>
+      </tr>
+    </table>
+  
+    <button class="btn btn-default" ng-click="addUser()">Add row</button>
+  </div> -->
