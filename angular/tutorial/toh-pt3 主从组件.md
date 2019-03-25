@@ -1,14 +1,14 @@
 # 主从组件
 
 目录   
-  制作 HeroDetailComponent  
-    编写模板  
-    添加 @Input() hero 属性  
-  显示 HeroDetailComponent  
-    修改 HeroesComponent 的模板  
-  有哪些变化？  
-  查看最终代码  
-  小结  
+　[制作 HeroDetailComponent](#制作 HeroDetailComponent)  
+　　编写模板  
+　　添加 @Input() hero 属性  
+　显示 HeroDetailComponent  
+　　修改 HeroesComponent 的模板  
+　有哪些变化？  
+　查看最终代码  
+　小结  
 
 此刻，HeroesComponent 同时显示了英雄列表和所选英雄的详情。  
 
