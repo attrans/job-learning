@@ -49,7 +49,7 @@ content_copy
 
 </div>  
 
-~~***添加 @Input() hero 属性***~~  
+`***添加 @Input() hero 属性***`  
 
 HeroDetailComponent 模板中绑定了组件中的 hero 属性，它的类型是 Hero。
 
