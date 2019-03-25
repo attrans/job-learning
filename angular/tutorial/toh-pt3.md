@@ -47,8 +47,10 @@ content_copy
     </label>
   </div>
 
-</div>
+</div>  
+
 ~~***添加 @Input() hero 属性***~~  
+
 HeroDetailComponent 模板中绑定了组件中的 hero 属性，它的类型是 Hero。
 
 打开 HeroDetailComponent 类文件，并导入 Hero 符号。
