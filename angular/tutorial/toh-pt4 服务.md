@@ -6,7 +6,7 @@
 为什么需要服务  
 ***`组件不应该直接获取或保存数据，它们不应该了解是否在展示假数据。 它们应该聚焦于展示数据，而把数据访问的职责委托给某个服务。`***  
 
-本节课，你将创建一个 HeroService，应用中的所有类都可以使用它来获取英雄列表。 不要使用 new 来创建此服务，而要依靠 Angular 的依赖注入机制把它注入到 HeroesComponent 的构造函数中。
+本节课，你将创建一个 HeroService，应用中的所有类都可以使用它来获取英雄列表。 不要使用 new 来创建此服务，而要依靠 Angular 的[依赖注入](https://angular.cn/guide/dependency-injection)机制把它注入到 HeroesComponent 的构造函数中。
 
 服务是在多个“互相不知道”的类之间共享信息的好办法。 你将创建一个 MessageService，并且把它注入到两个地方：
 
@@ -17,8 +17,10 @@ MessagesComponent 中，它会显示其中的消息。
 创建 HeroService
 使用 Angular CLI 创建一个名叫 hero 的服务。
 
-content_copy
-ng generate service hero
+content_copy  
+ng generate service hero  
+~~ng g s service/hero~~  
+~~ng generate service service/hero~~  
 该命令会在 src/app/hero.service.ts 中生成 HeroService 类的骨架。 HeroService 类的代码如下：
 
 src/app/hero.service.ts (new service)
@@ -55,7 +57,8 @@ import { HEROES } from './mock-heroes';
 content_copy
 getHeroes(): Hero[] {
   return HEROES;
-}
+}  
+~~方法名(参数名: 参数类型, 参数名: 参数类型, ...): 返回值类型？~~  ~~Typescript方法声明~~  
 提供（provide） HeroService
 在要求 Angular 把 HeroService 注入到 HeroesComponent 之前，你必须先把这个服务提供给依赖注入系统。稍后你就要这么做。 你可以通过注册提供商来做到这一点。提供商用来创建和交付服务，在这个例子中，它会对 HeroService 类进行实例化，以提供该服务。
 
@@ -71,7 +74,7 @@ content_copy
 })
 当你在顶层提供该服务时，Angular 就会为 HeroService 创建一个单一的、共享的实例，并把它注入到任何想要它的类上。 在 @Injectable 元数据中注册该提供商，还能允许 Angular 通过移除那些完全没有用过的服务来进行优化。
 
-要了解关于提供商的更多知识，参见提供商部分。 要了解关于注入器的更多知识，参见依赖注入指南。
+要了解关于提供商的更多知识，参见[提供商部分](https://angular.cn/guide/providers)。 要了解关于注入器的更多知识，参见[依赖注入指南](https://angular.cn/guide/dependency-injection)。
 
 现在 HeroService 已经准备好插入到 HeroesComponent 中了。
 
@@ -94,9 +97,9 @@ heroes: Hero[];
 
 content_copy
 constructor(private heroService: HeroService) { }
-这个参数同时做了两件事：1. 声明了一个私有 heroService 属性，2. 把它标记为一个 HeroService 的注入点。
+这个参数同时做了两件事：1. 声明了一个私有 heroService 属性，2. 把它标记为一个 ***HeroService 的注入点***。
 
-当 Angular 创建 HeroesComponent 时，依赖注入系统就会把这个 heroService 参数设置为 HeroService 的单例对象。
+当 Angular 创建 HeroesComponent 时，依赖注入系统就会***把这个 heroService 参数设置为 HeroService 的单例对象***。
 
 添加 getHeroes()
 创建一个函数，以从服务中获取这些英雄数据。
@@ -117,7 +120,8 @@ ngOnInit() {
   this.getHeroes();
 }
 查看运行效果
-刷新浏览器，该应用仍运行的一如既往。 显示英雄列表，并且当你点击某个英雄的名字时显示出英雄详情视图。
+刷新浏览器，该应用仍运行的一如既往。 显示英雄列表，并且当你点击某个英雄的名字时显示出英雄详情视图。  
+~~数据流向: ~~  
 
 可观察（Observable）的数据
 HeroService.getHeroes() 的函数签名是同步的，它所隐含的假设是 HeroService 总是能同步获取英雄列表数据。 而 HeroesComponent 也同样假设能同步取到 getHeroes() 的结果。
