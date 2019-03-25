@@ -6,7 +6,7 @@
 　　[添加 @Input() hero 属性](#添加-@input()-hero-属性)  
 　[显示 HeroDetailComponent](#显示-herodetailcomponent)   
 　　[修改 HeroesComponent 的模板](#修改-heroescomponent-的模板)  
-　[有哪些变化?](#有哪些变化?)  
+　[有哪些变化？](#有哪些变化？)  
 　[查看最终代码](#查看最终代码)  
 　[小结](#小结)  
 
@@ -136,7 +136,7 @@ content_copy
 <app-hero-detail [hero]="selectedHero"></app-hero-detail>
 浏览器刷新，应用又像以前一样开始工作了。
 
-# 有哪些变化?
+# 有哪些变化？
 像以前一样，一旦用户点击了一个英雄的名字，该英雄的详情就显示在了英雄列表下方。 现在，HeroDetailComponent 负责显示那些详情，而不再是 HeroesComponent。
 
 把原来的 HeroesComponent 重构成两个组件带来了一些优点，无论是现在还是未来：
