@@ -1,7 +1,7 @@
 # 主从组件
 
 目录   
-[制作 HeroDetailComponent](#制作HeroDetailComponent)  
+[制作 HeroDetailComponent](#制作 HeroDetailComponent)  
 　　编写模板  
 　　添加 @Input() hero 属性  
 　显示 HeroDetailComponent  
