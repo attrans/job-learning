@@ -92,10 +92,10 @@ src/app/app.component.html (router-outlet)
 content_copy
 <h1>{{title}}</h1>
 <router-outlet></router-outlet>
-<app-messages></app-messages>
-之所以移除 <app-heroes>，是因为只有当用户导航到这里时，才需要显示 HeroesComponent。
+<app-messages></app-messages>  
+***之所以移除 \<app-heroes\>，是因为只有当用户导航到这里时，才需要显示 HeroesComponent。***   
 
-<router-outlet> 会告诉路由器要在哪里显示路由的视图。
+***\<router-outlet\> 会告诉路由器要在哪里显示路由的视图。***   
 
 能在 AppComponent 中使用 RouterOutlet，是因为 AppModule 导入了 AppRoutingModule，而 AppRoutingModule 中导出了 RouterModule。
 
