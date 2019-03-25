@@ -1,15 +1,15 @@
 # 主从组件
 
 目录   
-[制作 HeroDetailComponent](#制作-herodetailcomponent)  
-　　编写模板  
-　　添加 @Input() hero 属性  
-　显示 HeroDetailComponent  
-　　修改 HeroesComponent 的模板  
-　有哪些变化？  
-　查看最终代码  
-　小结    
-[回到顶部](#readme)  
+　[制作 HeroDetailComponent](#制作-herodetailcomponent)  
+　　[编写模板](#编写模板)  
+　　[添加 @Input() hero 属性](#添加-@input()-hero-属性)  
+　[显示 HeroDetailComponent](#显示-herodetailcomponent)   
+　　[修改 HeroesComponent 的模板](#修改-heroescomponent-的模板)  
+　[有哪些变化？](#有哪些变化？)  
+　[查看最终代码](#查看最终代码)  
+　[小结](#小结)  
+
 此刻，HeroesComponent 同时显示了英雄列表和所选英雄的详情。  
 
 把所有特性都放在同一个组件中，将会使应用“长大”后变得不可维护。 你要把大型组件拆分成小一点的子组件，每个子组件都要集中精力处理某个特定的任务或工作流。  
