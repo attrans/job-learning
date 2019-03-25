@@ -93,7 +93,7 @@ content_copy
 <h1>{{title}}</h1>
 <router-outlet></router-outlet>
 <app-messages></app-messages>  
-***之所以移除 \<app-heroes\>，是因为只有当用户导航到这里时，才需要显示 HeroesComponent。***   
+***之所以移除\<app-heroes\>，是因为只有当用户导航到这里时，才需要显示 HeroesComponent。***   
 
 ***\<router-outlet\> 会告诉路由器要在哪里显示路由的视图。***   
 
@@ -123,7 +123,7 @@ content_copy
 </nav>
 <router-outlet></router-outlet>
 <app-messages></app-messages>
-routerLink 属性的值为 "/heroes"，路由器会用它来匹配出指向 HeroesComponent 的路由。 routerLink 是 RouterLink 指令的选择器，它会把用户的点击转换为路由器的导航操作。 它是 RouterModule 中的另一个公共指令。
+routerLink 属性的值为 "/heroes"，路由器会用它来匹配出指向 HeroesComponent 的路由。 ***routerLink 是 RouterLink 指令的选择器***，它会把用户的点击转换为路由器的导航操作。 它是 RouterModule 中的另一个公共指令。
 
 刷新浏览器，显示出了应用的标题和指向英雄列表的链接，但并没有显示英雄列表。
 
