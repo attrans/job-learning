@@ -6,7 +6,7 @@
 　　[添加 @Input() hero 属性](#添加-@input()-hero-属性)  
 　[显示 HeroDetailComponent](#显示-herodetailcomponent)   
 　　[修改 HeroesComponent 的模板](#修改-heroescomponent-的模板)  
-　[有哪些变化？](#有哪些变化？)  
+　[有哪些变化?](#有哪些变化?)  
 　[查看最终代码](#查看最终代码)  
 　[小结](#小结)  
 
@@ -27,17 +27,17 @@ ng generate component hero-detail
 ```
 这个命令会做这些事：
 
-- 创建目录 src/app/hero-detail。
+* 创建目录 src/app/hero-detail。
 
 在这个目录中会生成四个文件：
 
-- 作为组件样式的 CSS 文件。
+* 作为组件样式的 CSS 文件。
 
-- 作为组件模板的 HTML 文件。
+* 作为组件模板的 HTML 文件。
 
-- 存放组件类 HeroDetailComponent 的 TypeScript 文件。
+* 存放组件类 HeroDetailComponent 的 TypeScript 文件。
 
-- HeroDetailComponent 类的测试文件。
+* HeroDetailComponent 类的测试文件。
 
 该命令还会把 HeroDetailComponent 添加到 src/app/app.module.ts 文件中 @NgModule 的 declarations 列表中。  
 
@@ -67,23 +67,29 @@ content_copy
 
 ## 添加 @Input() hero 属性  
 
-HeroDetailComponent 模板中绑定了组件中的 hero 属性，它的类型是 Hero。
+HeroDetailComponent 模板中绑定了组件中的 hero 属性，它的类型是 Hero。  
 
-打开 HeroDetailComponent 类文件，并导入 Hero 符号。
+打开 HeroDetailComponent 类文件，并导入 Hero 符号。  
 
-src/app/hero-detail/hero-detail.component.ts (import Hero)
+`src/app/hero-detail/hero-detail.component.ts (import Hero)`
 content_copy
+```
 import { Hero } from '../hero';
-hero 属性必须是一个带有 @Input() 装饰器的输入属性，因为外部的 HeroesComponent 组件将会绑定到它。就像这样：
+```
+hero 属性[必须是一个带有 @Input() 装饰器的输入属性](https://angular.cn/guide/template-syntax#inputs-outputs)，因为**外部的** HeroesComponent 组件[将会绑定到它](https://angular.cn/tutorial/toh-pt3#heroes-component-template)。就像这样：
 
 content_copy
+```
 <app-hero-detail [hero]="selectedHero"></app-hero-detail>
+```
 修改 @angular/core 的导入语句，导入 Input 符号。
 
-src/app/hero-detail/hero-detail.component.ts (import Input)
+`src/app/hero-detail/hero-detail.component.ts (import Input)`
 content_copy
+```
 import { Component, OnInit, Input } from '@angular/core';
-添加一个带有 @Input() 装饰器的 hero 属性。
+```
+添加一个***带有 @Input() 装饰器的 hero 属性***。
 
 content_copy
 @Input() hero: Hero;
@@ -130,7 +136,7 @@ content_copy
 <app-hero-detail [hero]="selectedHero"></app-hero-detail>
 浏览器刷新，应用又像以前一样开始工作了。
 
-# 有哪些变化？
+# 有哪些变化?
 像以前一样，一旦用户点击了一个英雄的名字，该英雄的详情就显示在了英雄列表下方。 现在，HeroDetailComponent 负责显示那些详情，而不再是 HeroesComponent。
 
 把原来的 HeroesComponent 重构成两个组件带来了一些优点，无论是现在还是未来：
