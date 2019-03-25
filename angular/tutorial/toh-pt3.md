@@ -90,7 +90,8 @@ HeroDetailComponent 的选择器是 'app-hero-detail'。 把 <app-hero-detail> �
 heroes.component.html (HeroDetail binding)
 content_copy
 <app-hero-detail [hero]="selectedHero"></app-hero-detail>
-[hero]="selectedHero" 是 Angular 的属性绑定语法。
+[hero]="selectedHero" 是 Angular 的属性绑定语法。  
+~~子组件hero-detail，传入参数selected Hero给属性hero~~  
 
 这是一种单向数据绑定。从 HeroesComponent 的 selectedHero 属性绑定到目标元素的 hero 属性，并映射到了 HeroDetailComponent 的 hero 属性。
 
@@ -154,6 +155,6 @@ export class HeroDetailComponent implements OnInit {
 小结
 你创建了一个独立的、可复用的 HeroDetailComponent 组件。
 
-你用属性绑定语法来让父组件 HeroesComponent 可以控制子组件 HeroDetailComponent。
+你用[属性绑定](https://angular.cn/guide/template-syntax#property-binding)语法来让父组件 HeroesComponent 可以控制子组件 HeroDetailComponent。
 
-你用 @Input 装饰器来让 hero 属性可以在外部的 HeroesComponent 中绑定。
+你用 [@Input 装饰器](https://angular.cn/guide/template-syntax#inputs-outputs)来让 hero 属性可以在外部的 HeroesComponent 中绑定。
