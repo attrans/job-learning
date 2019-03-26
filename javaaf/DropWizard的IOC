@@ -1,0 +1,219 @@
+
+转至元数据结尾
+由 胡锐10071214创建, 最终由 杜永林10232509修改于 八月 29, 2018 转至元数据起始
+关于IOC的介绍，在维基百科上有如下的描述：
+
+2004年Martin Fowler 提出了"控制反转的"概念，他得出的结论是：依赖对象的获得被反转了。后来为这个创造了一个更好的名字：依赖注入(IOC = Inversion of Control).简单的解释是：系统的运作是通过两个或多个类的合作来实现业务逻辑，这使得每个对象都需要与其合作的对象的引用（依赖关系），这个依赖对象以前是通过自身实现去获得，现在通过一个容器统一的管理这些依赖关系，从而获得这种依赖的这种实现方式，我们可以成为IOC。
+
+IOC的优点是实现组件之间的解耦，提高程序的灵活性和可维护性。
+由于Dropwizard框架使用Jersy完成其restful部分的功能，而在Jersy中已经已经使用到了HK2作为其IOC容器，因此在使用Dropwizard框架开发restful服务时，也可以采用HK2作为IOC容器，来进行开发。
+使用IOC容器后,可以简化Dropwizard中三个方面的开发：
+
+需要的组件模块的初始化
+组件在Dropwizard中的注册
+组件的引用方式
+IOC容器为Dropwizard带来的好处
+组件模块的初始化
+在原始的dropWizard的开发中，组件模块需要在Application类的initialize方法中完成，并且初始化的步骤和需要参数都会暴露给组件的使用者，这样增加使用者的负担，而在使用IOC容器后，组件的初始化操作就能交由IOC容器来完成，初始化的相关流程都由模块提供者来掌握，保证了初始化过程的正确性。
+
+组件在Dropwizard中的注册
+在dropWizard中使用IOC容器后，理论上说只需要在dropWizard中注册IOC容器自身即可，其他的公共模块，业务模块都只需要通过java的注解注入到IOC容器中即可，整个流程大为简化。
+
+组件的引用方式
+在dropWizard未采用IOC容器时，服务之间的相互调用只能通过工厂方式或者是单例模式来实现，这样实现增加了测试用例的编写难度，而且业务之间可能不是使用接口来进行调用，使用IOC容器后，将能为解决这些问题提供技术手段。
+
+IOC容器的使用步骤
+步骤1:在POM文件中添加对IOC容器的依赖包
+
+<dependency> 
+<groupId>com.zte.ums.zenap.hk2</groupId> 
+<artifactId>zenap-hk2</artifactId> 
+<version>${zenap-hk2.version}</version> 
+</dependency>
+
+
+步骤2:IOC容器的启动
+IOC容器在dropwizard框架中启动，只需要dropwizard的Application类继承于IOCApplication类即可，这样整个Application的代码如下，就能完成dropwizard的启动过程：
+
+public class ExampleApp extends IOCApplication<Config>{ 
+<ac:structured-macro ac:name="unmigrated-wiki-markup" ac:schema-version="1" ac:macro-id="ae1a9358-91fb-45fe-9c88-fed86b43cabf"><ac:plain-text-body><![CDATA[ public static void main(String[] args) throws Exception { 
+]]></ac:plain-text-body></ac:structured-macro>
+new ExampleApp().run(args); 
+} 
+}
+
+步骤3：实现IOC的服务提供者，@Contract注解表明了这个是服务提供者的接口
+
+@Contract 
+public interface HelloService { 
+
+String greeting(); 
+}
+
+
+@Service表明了HelloServiceImpl是HelloService这个服务的提供者
+
+@Service 
+public class HelloServiceImpl implements HelloService{ 
+
+
+@Inject 
+private HelloConfiguration configuration; 
+
+
+public String greeting() { 
+return configuration.getMessage(); 
+} 
+}
+
+步骤4：服务消费者的实现，@Service表明这个对象将被IOC容器所管理，@Inject指明了当IOC容器在初始化时，会将HelloService的实现类注入，这样在具体的方法中，就可以使用这个类的方法了
+
+@Path("/hello") 
+@Service 
+public class HelloResource { 
+@Inject 
+private HelloService helloService; 
+@GET 
+public Response doGet() { 
+return Response.ok(String.format("%s", helloService.greeting())).build(); 
+} 
+}
+
+参照资料：https://hk2-project.github.io/ 
+为了方便在dropwizard框架中使用IOC容器，已经将dropwizard框架中的基本对象和Configuration 提前注入到IOC容器中，可以通过以下的方式注入到业务代码中,如下：
+
+@Inject 
+private Configuration configuration; 
+
+@Inject 
+private Environment env; 
+
+@Inject 
+private ObjectMapper objectMapper; 
+
+@Inject 
+private HelloAppConfiguration helloAppConfiguration; 
+
+@Inject 
+private HelloConfiguration helloConfiguration;
+
+可以参考: http://gitlab.zte.com.cn/5G_PaaS/zenap-sdk/tree/master/zenap-hk2/zenap-hk2-dw/src/test
+中的代码
+在业务模块需要使用到消息中间件，分布式缓存，数据库连接和cometd时，需要采用如下的步骤：
+步骤1：在POM中增加消息中间件，分布式缓存，数据库连接框架连接和cometd的依赖，如下
+
+<!—对消息中间件的依赖--> 
+<dependency> 
+<groupId>com.zte.ums.zenap.mq</groupId> 
+<artifactId>zenapmqqpid-impl</artifactId> 
+<version>${zenap-mq.version}</version> 
+</dependency> 
+
+<!—对分布式缓存的依赖--> 
+<dependency> 
+<groupId>com.zte.ums.zenap.cache</groupId> 
+<artifactId>zenapcacheaerospike-impl</artifactId> 
+<version>${zenap-cache.version}</version> 
+</dependency> 
+
+<!—对数据库连接框架的依赖--> 
+<dependency> 
+<groupId>com.zte.ums.zenap.db</groupId> 
+<artifactId>zenapdbjdbi</artifactId> 
+<version>${zenap-db.version}</version> 
+</dependency> 
+
+<!—对cometd推送框架的依赖--> 
+<dependency> 
+<groupId>com.zte.ums.zenap.sdk.cometd</groupId> 
+<artifactId>zenap-cometd-bundle</artifactId> 
+<version>${zenap-cometd.version}</version> 
+</dependency>
+
+2．在业务服务中，注入各个服务的入口服务
+
+@Inject 
+private ICacheService cacheService; //注入分布式缓存服务 
+@Inject 
+private IMessagePushService msgPusher; //注入commetd消息推送服务 
+@Inject 
+private JdbiDaoFactory jdbiDaoFactory; //注入jdbi数据库访问服务 
+@Inject 
+private MQSessionFactory mqSessionFactory; //注入消息中间件客户端服务
+
+代码可以参见：http://gitlab.zte.com.cn/5G_PaaS/zenap-sdk/tree/master/zenap-sdk-sample工程，在这个工程里面有相关服务使用的例子
+
+其他注意事项
+HK2扫描IOC组件的范围
+目前HK2容器，只会自动扫描package为"com.zte"开头的包下的组件，如果要扫描其他开头的package，可以在dropwizard的App的initialize方法上增加其他包的配置，代码如下，在这个例子中增加了对以ioc开头的package的扫描
+
+public class HelloApp extends IOCApplication<HelloAppConfiguration> { 
+
+private static final String CONFIGURATION_FILE = "hello.yml"; 
+
+<ac:structured-macro ac:name="unmigrated-wiki-markup" ac:schema-version="1" ac:macro-id="b6f565a6-5841-4424-8987-a2d0c24d8c7d"><ac:plain-text-body><![CDATA[ public static void main(String[] args) throws Exception { 
+]]></ac:plain-text-body></ac:structured-macro> 
+//模型通过环境变量，提供yml中的配置 
+System.setProperty("dwApp.hello.message", "dwApp hello message"); 
+
+String configFile = HelloApp.class.getClassLoader().getResource(CONFIGURATION_FILE).getFile(); 
+
+<ac:structured-macro ac:name="unmigrated-wiki-markup" ac:schema-version="1" ac:macro-id="2fbf57eb-4237-40e8-92c7-883be7a1d528"><ac:plain-text-body><![CDATA[ new HelloApp().run(new String[]{"server", configFile}); 
+]]></ac:plain-text-body></ac:structured-macro>
+} 
+
+@Override 
+public void initialize(Bootstrap<HelloAppConfiguration> bootstrap) { 
+bootstrap.addBundle(new AutoConfigBundleBuider().addPackageName("ioc").build()); 
+} 
+}
+
+IOC容器与非IOC模式的bundle的结合方式
+Dropwizard的生态体系中，有很多的第三方的组件，这些组件是通过dropwizard的App的initialize和run两个方法，融合到Dropwizard的中，在使用IOC的方式后，可以通过IOC的方式包装后，集成这些第三方组件，另外，也可以使用它的原生的方式，再使用了原生的方式后，也可以其他使用IOC方式的组件共存，使用的方式如下
+步骤1：Appliaction类需要继承自IOCApplication，保持IOC方式的组件能正常启动
+
+public class HelloApp extends IOCApplication<HelloAppConfiguration>
+
+步骤2：覆盖IOCApplication中的initialize方法，在覆盖后的initialize中，需要调用super的initialize方法，
+
+@Override 
+public void initialize(Bootstrap<HelloAppConfiguration> bootstrap) { 
+super.initialize(bootstrap); 
+bootstrap.addBundle(new xxxxBundle()); 
+}
+
+
+或是是加入如下的代码：
+
+public void initialize(Bootstrap<HelloAppConfiguration> bootstrap) { 
+bootstrap.addBundle(new AutoConfigBundleBuider().build()); 
+bootstrap.addBundle(new xxxxBundle()); 
+}
+
+步骤3：覆盖IOCApplication中的run方法，在覆盖后的run中，需要调用super的run方法
+
+public void run(T configuration, Environment environment) throws Exception { 
+super.run(configuration, environment); 
+。。。。。。。。。 
+}
+
+
+
+通过查询的方式从IOC中获得对应的服务的实例
+HK2容器中的对象，除了通过注入的方式来获取外，也可以主动查询的方式来获取，javaAF提供一个静态方式来实现这个功能
+
+package com.zte.ums.zenap.hk2;
+ 
+import org.glassfish.hk2.api.ServiceLocator;
+ 
+public class ServiceLocatorHolder {
+ 
+    private static ServiceLocator locator;
+ 
+    public static ServiceLocator getLocator() {
+        return locator;
+    }
+ 
+     
+}
+通过调用getLocator() 就可以获取到HK2的ServiceLocator对象，然后通过ServiceLocator的getService方法，传入需要对象的类名，就可以获得已经由IOC容器创建好的实例对象
