@@ -158,7 +158,7 @@ content_copy
 </div>
 这个模板用来表示由英雄名字链接组成的一个阵列。
 
-*ngFor 复写器为组件的 heroes 数组中的每个条目创建了一个链接。
+***\*ngFor 复写器为组件的 heroes 数组中的每个条目创建了一个链接。***
 
 这些链接被 dashboard.component.css 中的样式格式化成了一些色块。
 
@@ -275,7 +275,7 @@ content_copy
     <h4>{{hero.name}}</h4>
   </div>
 </a>
-你正在 *ngFor 复写器中使用 Angular 的插值表达式来把当前迭代的 hero.id 插入到每个 routerLink 中。
+***你正在 \*ngFor 复写器中使用 Angular 的[插值表达式](https://angular.cn/guide/template-syntax#interpolation)来把当前迭代的 hero.id 插入到每个 [routerLink](https://angular.cn/tutorial/toh-pt5#routerlink) 中。***
 
 HeroesComponent 中的英雄链接
 HeroesComponent 中的这些英雄条目都是 <li> 元素，它们的点击事件都绑定到了组件的 onSelect() 方法中。
@@ -302,6 +302,8 @@ content_copy
 </ul>
 你还要修改私有样式表（heroes.component.css），让列表恢复到以前的外观。 修改后的样式表参见本指南底部的最终代码。
 
+~~dashboard和heroes列表都能通过点击超链接跳转到每个hero详情~~
+
 移除死代码（可选）
 虽然 HeroesComponent 类仍然能正常工作，但 onSelect() 方法和 selectedHero 属性已经没用了。
 
@@ -323,18 +325,19 @@ export class HeroesComponent implements OnInit {
     .subscribe(heroes => this.heroes = heroes);
   }
 }
-支持路由的 HeroDetailComponent
+
+## 支持路由的 HeroDetailComponent
 以前，父组件 HeroesComponent 会设置 HeroDetailComponent.hero 属性，然后 HeroDetailComponent 就会显示这个英雄。
 
 HeroesComponent 已经不会再那么做了。 现在，当路由器会在响应形如 ~/detail/11 的 URL 时创建 HeroDetailComponent。
 
-HeroDetailComponent 需要从一种新的途径获取要显示的英雄。
+HeroDetailComponent 需要从一种新的途径获取**要显示的英雄**。
 
-获取创建本组件的路由，
+* 获取创建本组件的路由，
 
-从这个路由中提取出 id
+* 从这个路由中提取出 id
 
-通过 HeroService 从服务器上获取具有这个 id 的英雄数据。
+* 通过 HeroService 从服务器上获取具有这个 id 的英雄数据。
 
 先添加下列导入语句：
 
@@ -371,11 +374,11 @@ getHero(): void {
   this.heroService.getHero(id)
     .subscribe(hero => this.hero = hero);
 }
-route.snapshot 是一个路由信息的静态快照，抓取自组件刚刚创建完毕之后。
+***route.snapshot 是一个路由信息的静态快照，抓取自组件刚刚创建完毕之后。***  
 
-paramMap 是一个从 URL 中提取的路由参数值的字典。 "id" 对应的值就是要获取的英雄的 id。
+***paramMap 是一个从 URL 中提取的路由参数值的字典。 "id" 对应的值就是要获取的英雄的 id。***  
 
-路由参数总会是字符串。 JavaScript 的 (+) 操作符会把字符串转换成数字，英雄的 id 就是数字类型。
+***路由参数总会是字符串。 JavaScript 的 (+) 操作符会把字符串转换成数字，英雄的 id 就是数字类型。***  
 
 刷新浏览器，应用挂了。出现一个编译错误，因为 HeroService 没有一个名叫 getHero() 的方法。 这就添加它。
 
