@@ -1,0 +1,371 @@
+项目疑难问题总结
+1. OOM, heapAnalyzer, arthas
+2. kafka消息收发, 零拷贝, 使用规范等等
+	kafka设置手动commit
+	默认策略 <--> 手动设置的策略
+	默认策略:
+		new KafkaConsumer(); //new消费者 ->
+		consumer.subscribe(); //开始订阅 -> 
+		start listen:
+		// 省略各种异常场景
+		while(!Thread.interrupted()) {
+			// 拉取消息
+			ConsumerRecords<String, String> records = consumer.poll(timeout); 
+			// if (records.count() > 0) -> 
+			Set<TopicPartition> partitions = consumer.assignment(); 
+			// 暂停分区
+			consumer.pause(partitions); 
+			// 起线程处理消息
+			new Thread(new Runnable() { 
+				public void run() { 
+					// getAllRecords
+					private List<String> getAllRecords(ConsumerRecords<String, String> records) {
+						List<String> allRecords = new ArrayList();
+						records.forEach((record) -> {
+							allRecords.add(record.value());
+						});
+						return allRecords;
+					}
+					// filter record
+					List<String> myRecords = (List) allRecords.stream().filter(this.recordFilter).collect(Collectors.toList());
+						...
+						// record filter, 外部传入
+						private final Predicate<String> recordFilter = record -> {
+							// filter logic
+							return true;
+						};
+						...
+					// if (myRecords.size() > 0)
+					recordsConsumer.accept(myRecords);
+					// 设置status标志位, AtomicInteger, 预置:
+					// private static final int STATUS_FREE = 0;
+					// private static final int STATUS_DONE_SUCCESS = 1;
+					// private static final int STATUS_DONE_FAILED = 2;
+					this.status.set(1);
+					// catch exception, set(2)
+						...
+						// records consumer, 外部传入
+						private final java.util.function.Consumer<List<String>> recordsConsumer = messages -> {
+						try {
+							for (String message : messages) {
+								//process message
+								...
+							}
+						} catch (Exception e) {
+							LOGGER.error("process kafka message failed: ", e);
+						}
+						...
+					// if (this.status.get() == 1), 提交commit, 否则不提交
+					consumer.commitSync();
+					// 设置状态
+					this.status.set(0);
+					// 恢复分区
+					consumer.resume(partitions);
+				}
+			}, Thread.currentThread().getName() + "_deal_record").start();
+		};
+	手动设置策略: 手动设置了timeout; 使用线程池处理消息, 使用future.get(60, TimeUnit.SECONDS); //等待60s的处理消息时间
+		// poll
+		// assignment
+		// pause
+		// executor提交Callable任务处理消息
+		Future<State> future = executor.submit(new HandlerWorker(handler, messages)); // handler为外部传入recordsConsumer
+		if (future != null) {
+			// V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException;
+			// Waits if necessary for at most the given time for the computation to complete, and then retrieves its result, if available.
+			future.get(60, TimeUnit.SECONDS); 
+			if (future.isDone()) {
+				consumer.commitSync();
+				consumer.resume(partitions);
+				future = null;
+			}
+		}
+		// future.get如果抛异常
+		// TimeoutException, do nothing
+		// ExecutionException, 仍然commit, resume
+		// 其他Exception, 重置: 重新生成consumer, 重新订阅, 然后再次进入while (!Thread.interrupted()) {...}进行下一轮拉取和处理消息
+		
+			...
+			this.executor = new ThreadPoolExecutor(
+				1,
+				1,
+				0,
+				TimeUnit.NANOSECONDS,
+				new LinkedBlockingQueue<>()
+			);
+			...
+			...
+			private static enum State {
+				DONE
+			}
+			private static class HandlerWorker implements Callable<State> {
+
+				private java.util.function.Consumer<List<String>> handler;
+				private List<String> messages;
+
+				public HandlerWorker(java.util.function.Consumer<List<String>> handler, List<String> messages) {
+					this.handler = handler;
+					this.messages = messages;
+				}
+
+				@Override
+				public State call() throws Exception {
+					handler.accept(messages);
+					return State.DONE;
+				}
+			}
+			...
+		
+	
+3. 数据库
+4. csv读取, 自动匹配中英文列头:
+	Bean类属性设置实例:
+	@CsvBindAndJoinByName(column = "groupId", elementType = String.class)
+    private MultiValuedMap<String, String> groupId;
+	大致流程/原理:
+	配置文件读取中英文列头的值; 反射获取Bean注解, 读取配置文件中英文列头值, 再利用反射修改注解CsvBindAndJoinByName的column属性的值为配置的中英文列头值, 用"|"来组合中英文列头, 这样的话允许列头匹配多个值(搭配bean类的属性类型为MultiValuedMap)(这样源文件csv中列头为中文/英文都可以匹配)
+5. 反射读取拷贝对象
+	按照dest对象的属性来匹配; 支持按照指定规则匹配属性名; 支持对属性对象做指定规则的转换
+	/**
+	 * copy value from source object to dest object, use property name as match condition
+	 * if value of a source object property has type of MultiValuedMap, then copy its inside value to corresponding dest object property
+	 *
+	 * @param dest:   dest object
+	 * @param source: source object
+	 */
+	public static void copyProperties(Object dest, Object source) {
+		Field[] destFields = dest.getClass().getDeclaredFields();
+		for (Field dField : destFields) {
+			try {
+				String dName = dField.getName();
+				dName = dName.substring(0, 1).toUpperCase() + dName.substring(1); //首字母大写
+				Method sGetMethod = source.getClass().getMethod("get" + dName); //获取get方法
+				Object sValue = sGetMethod.invoke(source); //调用get方法获取source对象中同名属性的值
+				if (sValue instanceof MultiValuedMap) { //如果获取的值是MultiValuedMap, 取出内部的值
+					sValue = ((MultiValuedMap) sValue).values().toArray()[0];
+				}
+				Method dSetMethod = dest.getClass().getMethod("set" + dName, dField.getType()); //获取set方法
+				dSetMethod.invoke(dest, sValue); //调用set方法给dest对象属性赋值
+			} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+				log.warn("current property copy failed: ", e);
+			}
+		}
+	}
+6. activiti子图, 子图变量传递, 子图合并原图变量冲突
+	传到子图变量, 在入口/出口的地方存为不同的变量名, 在出口汇聚的类, 取出两者, 手动合并(可能需要取到内层做合并)
+	传变量示例:
+		<activiti:in source="record" target="record"></activiti:in>
+		<activiti:out source="record" target="recordLocal"></activiti:out>
+	取变量示例:
+		public static Map getRecord(DelegateExecution execution) {
+			String processInstanceId = execution.getProcessInstanceId();
+			RuntimeService runtimeService = ActivitiService.getRuntimeService(execution);
+
+			String recordStr = (String) (ActivitiService.getVariable(runtimeService, processInstanceId, "record")); // 当前record为变量名
+			if (recordStr == null) {
+				LOGGER.warn(String.format("[BaseProcessor] getVariable() return null recordStr"));
+				return new HashMap();
+			}
+			Map record = JsonUtil.getObjFromJson(recordStr, Map.class);
+			return record;
+		}
+7. kafka消费组不断进组退组
+	kafka客户端发送Sending JoinGroup，然后客户端抓包看到立即收到响应，但是客户端实际处理Received successful JoinGroup 延迟了一分钟，等处理完在发送Sending SYNC_GROUP 时，消费者已经被服务端超时溢出组，导致再均衡过程失败，一直不停的在重试上述过程，客户端Received successful JoinGroup 延迟了一分钟的问题，看了两天源码，未找到原因，正在想规避措施
+	kafka客户端每次发送joining group之后，服务端立即收到请求并回了响应，并启动10秒定时器判断本次再均衡是否完成，如果10秒没完成就把消费者踢出消费组，但网卡抓包看到客户端收到响应之后，客户端并没有立即处理而是每次都延迟一分钟才能处理收到的响应包，导致客户端和服务端再去进行SyncGroup 交互时，已经超过10秒，消费者被踢出组导致再均衡一直失败。
+	根因没找到，但根据以往经验，准备把链路杀掉，重新建链
+	重启kafka客户端/微服务解决
+8. 处理csv OOM, 分批次写入
+9. csv文件对比筛选, 双指针遍历两个文件对比找出交集
+10. springboot工程数据库连接数
+11. 使用脚本刷nginx静态文件
+12. 索引膨胀(6G数据, 19G索引)
+13. activiti common delegate
+	把业务流程/代码类似的工作流delegate(授权/委托/委派/代表)类抽成公共类, 把工作流节点名等工作流图中的配置, 通过约定作为匹配模型, 从而达成不同的节点能够委派同一个java类来执行相应的代码
+	
+	
+14. quartz如何定义及schedule任务job, 以及DisallowConcurrentExecution
+15. sql优化
+
+// 线程池Worker继承了AQS
+private final class Worker extends AbstractQueuedSynchronizer implements Runnable {
+	...
+}
+
+
+16. 注意@Transactional的回滚, 碰到不回滚问题分析思路: https://www.jb51.net/article/263713.htm
+默认只回滚非受检异常; 不支持事务的地方不能回滚(比如MyIsam引擎的MySQL; 比如代码其他不支持事务的地方), 需要手动回滚事务
+
+17. 分布式事务: https://www.infoq.cn/article/qrsqlqqpboboud3z5mfy
+模块化单体 + 本地事务, 保证一致性
+分布式事务 + 消息队列通信, 保证一致性
+编排式, 某个服务会担任整个分布式状态变更的协调者和编排者
+等等等等
+
+比如某个动作的完成, 需要两个微服务来分别对数据库进行操作, 可以想到的一致性/事务实现方式有:
+1. 把两处的逻辑合并, 放到同一处来做
+2. 两处相互进行通信, 告知对方(kafka?)自己这边的执行成功与否, 是否需要对方来做回滚
+3. 另找一方C来管理两边的执行情况, 允许两边向其告知执行结果, 然后C综合判断是否哪一边需要回滚
+
+业界有很多已经实现的分布式事务管理器/框架, 比如阿里seata
+
+最终数据一致性
+
+18. Response中携带的输入流(浏览器下载文件)会不会自动关闭? 答案是会.
+本地验证流程:
+1. 写后台Rest接口, 读取本地zip文件返回, 接口定义为GET, 这样浏览器可以直接访问, 方便调试
+2. DEBUG模式启动工程执行, 清日志, 浏览器访问, 触发流式下载文件
+3. 控制台先不打断点, 追踪日志打印, 寻找疑似的调用类/包, 从源码进去找可能关闭流的位置, 然后再加断点, 一步步调试
+4. 打断点之后的调试, 注意观察堆栈(注意堆栈中最上面的调用是最新的调用, 不要弄错先后顺序), 寻找堆栈中可能的调用位置, 可以点开里面看有没有stream, 有没有entity, 有没有zip包名称或者zip包内文件名称等
+5. 由于源码嵌套很多, 调用关系很复杂, 可能比较难找出来关键点, 需要细心和耐心
+6. 本地验证, 可以把传入rest请求用做返回的InputStream, 用自己的实现类来实现(比如实现MyFileInputStream extends FileInputStream), 并重写close方法(因为子类重写了父类的close方法, 实际执行一定会用子类的close, 不用去管原来的源码实现里用的是哪个实现类了), 在close方法内打断点, 可以直接观察到close的调用.
+7. 最终发现是在输入流转输出流的writeTo方法中, 写完输出流之后, 关闭的
+
+SQL注入问题; jdbc改orm
+jdbc改orm, 配置两套environment, 可区分开发环境和生产环境的数据源(比如h2和postgres) 配置两套databaseid, 可用于区分不同的sql语法, 通过if来适配
+单元测试流程可以使用h2数据库, 配置为内存模式"jdbc:h2:mem:user1"
+改orm, #{}携带参数可以增加''(或者使用'${}'), 可以用于sql语句中参数值的动态匹配, 但是sql语句中的语义词(比如列名等)上的动态匹配, 不能携带'', 只能用${}传参, 此时需要增加额外的校验和拦截
+
+1. mybatis-config.xml---核心配置文件
+<environment>: 配置DataSource, 可以根据environment的id来区分使用不同的DataSource, DataSource的配置可以选择POOLED, UNPOOLED, JNDI方式
+	通过java代码获取DataSource对象: <dataSource type="com...MybatisDataSource"/>
+	通过POOLED方式:
+		<dataSource type="POOLED">
+            <property name="driver" value="com.mysql.jdbc.Driver"/>
+            <property name="url" value="jdbc:mysql://localhost:3306/test_1?useUnicode=true&amp;characterEncoding=utf8"/>
+            <property name="username" value="root"/>
+            <property name="password" value="root"/>
+        </dataSource>
+<databaseIDProvider>: 配置数据库id, 用于区分不同的数据库, 后续可以通过mybatis内置的_databaseId属性, 来匹配不同的sql语法, 如:
+	<databaseIdProvider type="DB_VENDOR">
+        <property name="H2" value="h2"/>
+        <property name="PostgreSQL" value="postgres"/>
+    </databaseIdProvider>
+<mappers>: 配置sql映射文件
+
+2. MyBatis工具类, 获取SqlSession
+	public class MybatisUtils {
+
+		private static SqlSessionFactory sqlSessionFactory;
+		//使用mybatis第一步, 获取sqlSessionFactory对象
+		static {
+			try {
+				String resource = "mybatis-config.xml";
+				InputStream inputStream = Resources.getResourceAsStream(resource);
+				sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		//既然有了sqlSessionFactory, 顾名思义, 我们就可以从中获得sqlSession的实例了
+		//sqlSession 完全包含了面向数据库执行SQL命令所需的所有方法
+		public static SqlSession getSqlSession(){
+			return sqlSessionFactory.openSession();
+		}
+	}
+
+3. 实体类, 比如xxxData, 对应sql执行结果的实体类, 若是执行结果为void的sql语句, 则不需要定义实体类
+
+4. Mapper接口, 比如xxxMapper, 定义调用数据库操作的接口/方法入口, 与xxxMapper.xml的sql配置对应, 可对应传参, 如:
+	public interface ReportMapper {
+		List<ReportData> getReport(
+			@Param("reportId") String reportId,
+			...
+			@Param("pageSize") int pageSize,
+			@Param("offset") int offset,
+			@Param("limit") int limit
+		);
+		int countReportNum(
+			@Param("reportId") String reportId
+			...
+		);
+	}
+
+5. xxxMapper.xml---sql映射文件(<sql>为片段部分, <select>, <update>为执行部分, <sql>可以通过refid引用)
+报告查询mapper.xml:
+<mapper namespace="com...ReportMapper">
+    <sql id="reportA">
+        SELECT
+            <if test="_databaseId == 'h2'">
+                exetime,
+            </if>
+            <if test="_databaseId == 'postgres'">
+                to_date(exetime :: text, 'yyyy-mm-dd') reporttime,
+            </if>
+            reporttype,
+			...
+            reportname
+        FROM
+            report_table_a
+        WHERE
+            reportid=#{reportId}
+            AND reporttype=#{reportType}
+            <if test="_databaseId == 'h2'">
+                AND exetime=#{reportTime}
+            </if>
+            <if test="_databaseId == 'postgres'">
+                AND to_date(exetime :: text, 'yyyy-mm-dd')=#{reportTime}
+            </if>
+            <if test="series != null">
+                AND series_name IN
+                <foreach collection="series_name" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="map != null">
+                <foreach collection="map.entrySet()" index="key" item="value" open="" separator="" close="">
+                    AND ${key}::TEXT LIKE CONCAT('%', #{value}, '%')
+                </foreach>
+            </if>
+            <if test="globalFilterString != null">
+                AND (
+                    reportid::TEXT LIKE CONCAT('%', #{globalFilterString}, '%') OR
+                    reporttype LIKE CONCAT('%', #{globalFilterString}, '%') OR
+					...
+                    reportname LIKE CONCAT('%', #{globalFilterString}, '%')
+                )
+            </if>
+    </sql>
+    <select id="getReport" resultType="com...ReportData">
+        <include refid="reportA"/>
+        <if test="sortKey != null">
+            ORDER BY ${sortKey} ${sortDirection}
+        </if>
+        <if test="_databaseId == 'h2'">
+            <if test="pageSize > 0">
+                LIMIT ${offset}, ${limit}
+            </if>
+        </if>
+        <if test="_databaseId == 'postgres'">
+            <if test="pageSize > 0">
+                OFFSET ${offset} LIMIT ${limit}
+            </if>
+        </if>
+    </select>
+    <select id="countReportNum" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM (<include refid="reportA"/>) temp
+    </select>
+</mapper>
+单元测试中创表插数据mapper.xml:
+<mapper namespace="com...FakeCreateTableMapper">
+    <update id="createReportTable">
+        CREATE TABLE report_table_a (
+            reportid varchar(255) NOT NULL,
+			...,
+        CONSTRAINT report_table_a_pkey UNIQUE (reportid, reporttype)
+        );
+        insert into report_table_a ( select * from csvread('${csvPath}'));
+    </update>
+    <select id="countReportTest" resultType="java.lang.Integer">
+        select count(*) from report_table_a;
+    </select>
+<!--    <delete id="deleteTable">-->
+<!--        DROP TABLE report_table_a;-->
+<!--    </delete>-->
+</mapper>
+
+6. 执行数据库操作
+SqlSession sqlSession = MybatisUtils.getSqlSession();
+ReportMapper reportMapper = sqlSession.getMapper(ReportMapper.class);
+int count = reportMapper.countReportNum(...);
+List<ReportData> reportData = reportMapper.getReport(...);
