@@ -1,0 +1,975 @@
+log.info("strArray: " + Arrays.toString(strArray));
+StringUtils.join(list, ",");
+
+@Path("/import/{subtype}")
+@Consumes(MediaType.MULTIPART_FORM_DATA)
+@Produces(APPLICATION_JSON_UTF8_VALUE)
+@POST
+public Response fileImport(@HeaderParam("language-option") String language, @PathParam("subtype") String subType, @Context HttpServletRequest request) {
+	DiskFileItemFactory factory = new DiskFileItemFactory();
+	factory.setSizeThreshold(4096 * 100);
+	factory.setRepository(new File("d:/files"));
+	ServletFileUpload upload = new ServletFileUpload(factory);
+	upload.setSizeMax(MAX_SIZE);
+	List<FileItem> fileItemList = upload.parseRequest(request);
+	fileItemList.forEach(item -> {
+		log.info("fieldName: " + item.getFieldName);
+		log.info("fieldValue: " + Streams.asString(item.getInputStream()));
+	});
+}
+
+
+惰性加载/懒加载: 
+const routes: Routes = [
+  {
+    path: 'items',
+    loadChildren: () => import('./items/items.module').then(m => m.ItemsModule)
+  }
+];
+
+
+retrofit请求重试: @RetryFlag
+
+
+forkJoin(
+	this.httpService.getObservableResult1(),
+	this.httpService.getObservableResult2()
+).pipe(
+	map((dataArray: any[]) => {
+		return {
+			data1: dataArray[0],
+			data2: dataArray[1]
+		}
+	})
+).subscribe((data) => {
+	console.log('data: ', data);
+})
+
+
+找到报错类, 点进去, 下载源码, 进入源码文件夹, 解压-sources.jar, 使用文本编辑器打开, 查看源码报错逻辑
+
+反射框架Reflections, 实现扫描并获取自定义注解
+
+CircuitBreaker熔断器配置, 根据实际需要可以配置/取消熔断器(state machine 记录/统计请求的情况, 看失败(500)率, 看超时)
+
+document.documentElement.scrollTop
+
+sql查询limit优化: 
+1. 弄一个主键id
+2. 子查询+覆盖索引
+select * from weibo where id in (select id from weibo where user_id=123 order by create_time desc limt x,y); --> in改为连接查询(join), 因为子查询结果很多, in的效率就差了
+select * from weibo t1 inner join (select id from weibo where user_id=123 order by create_time desc limt x,y) t2 on t1.id = t2.id;
+
+restful传json数据到后台, 如果包含double类型, 使用Map的raw类型接收, jackson接收/转换数据时可能出现自动转科学计数法问题, 但使用Map<String, String>或Map<String, List<String>>等指定了String类型, 则会自动当成字符串接收, 不存在科学计数法问题; 也可以通过Object接收, 再通过ObjectMapper转换成具体的类型, 比如Map<String, List<String>>; 也可以通过JsonNode接收, 再转换(JsonNode的get方法等); 如果存在接收时得到科学计数法的数据, 也可以通过正则判断是否为科学计数法, 再通过new BigDecimal(doubleString).toPlainString()还原为普通计数法
+
+json中的数组, 传到后台接收为ArrayList类型数据(可以通过entry.getValue().getClass().getName()打印出来)
+
+破解网页阅读全文: F12查看Elements, 找到answer的div, 把height调大; 再找到包含answer和"阅读全文"的外层div, 再把height调大
+
+关闭CSDN动态背景: 
+	1. F12打开浏览器Elements, 去掉body样式中的background-image和background-repeat(和background-color)的勾选
+	2. 控制台(分两次)输入js代码: 
+		document.querySelector("body").style.cssText="background-image:url() !important";
+		document.querySelector("body").style.cssText="background-repeat:no-repeat !important";
+
+concat函数可以用于select, 用于组合查询结果的列并输出; 在MySQL中也可用于where条件, 比如where concat(name, '-', address) in ("test1-hello", "test2-hello2"); 但是在Postgres中不可以这样使用, 可以使用: where (name, address) in (('test1', 'hello'), ('test2', 'hello2')), 是否是通用写法? 其实concat用于where条件相比于where-and拼接, 查询更加耗时, 因为需要首先concat, 然后再逐条比对, 并且不像and有短路效果(可以提前结束)
+
+mysql comment怎么使用, 有什么作用
+
+console.time(), console.timeEnd()
+
+正则匹配开头结尾不能是空格, 中间可以有0个或多个空格: new RegExp("^(?!\\s)(?!.*\\s$)[\\sa-zA-Z0-9\\u4E00-\\u9FFF_-]{1,50}$", 'g').test(this.parameterTemplateLabel)
+
+java下划线转驼峰:
+
+    private static Pattern UNDERLINE_PATTERN = Pattern.compile("_([a-z])");
+
+    public String underlineToHump (String str){
+        //正则匹配下划线及后一个字符，删除下划线并将匹配的字符转成大写
+        Matcher matcher = UNDERLINE_PATTERN.matcher(str);
+        StringBuffer sb = new StringBuffer(str);
+        if (matcher.find()) {
+            sb = new StringBuffer();
+            //将当前匹配的子串替换成指定字符串，并且将替换后的子串及之前到上次匹配的子串之后的字符串添加到StringBuffer对象中
+            //正则之前的字符和被替换的字符
+            matcher.appendReplacement(sb, matcher.group(1).toUpperCase());
+            //把之后的字符串也添加到StringBuffer对象中
+            matcher.appendTail(sb);
+        } else {
+            //去除除字母之外的前面带的下划线
+            return sb.toString().replaceAll("_", "");
+        }
+        return underlineToHump(sb.toString());
+    }
+	
+动态从ResultSet获取数据列的值传入Bean:
+	Bean result = new Bean();
+	ResultSetMetaData metaData = resultSet.getMetaData();
+	int columnCount = metaData.getColumnCount();
+	// 注意column从1开始!
+	for (int i = 1; i < columnCount + 1; i++) {
+		String columnName = metaData.getColumnName(i);
+		try {
+			PropertyUtils.setSimpleProperty(result, Util.underlineToHump(columnName), resultSet.getString(columnName));
+		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			log.warn("map column {} failed", columnName);
+		}
+	}
+	return result;
+	
+/**
+ * copy value from source object to dest object, use property name as match condition
+ * if value of a source object property has type of MultiValuedMap, then copy its inside value to corresponding dest object property
+ *
+ * @param dest:   dest object
+ * @param source: source object
+ */
+public static void copyProperties(Object dest, Object source) {
+	Field[] destFields = dest.getClass().getDeclaredFields();
+	for (Field dField : destFields) {
+		try {
+			String dName = dField.getName();
+			dName = dName.substring(0, 1).toUpperCase() + dName.substring(1); //首字母大写
+			Method sGetMethod = source.getClass().getMethod("get" + dName); //获取get方法
+			Object sValue = sGetMethod.invoke(source); //调用get方法获取source对象中同名属性的值
+			if (sValue instanceof MultiValuedMap) { //如果获取的值是MultiValuedMap, 取出内部的值
+				sValue = ((MultiValuedMap) sValue).values().toArray()[0];
+			}
+			Method dSetMethod = dest.getClass().getMethod("set" + dName, dField.getType()); //获取set方法
+			dSetMethod.invoke(dest, sValue); //调用set方法给dest对象属性赋值
+		} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+			log.warn("current property copy failed: ", e);
+		}
+	}
+}
+
+//动态修改注解的值
+@SuppressWarnings("unchecked")
+public static Object changeAnnotationValue(Annotation annotation, String key, Object newValue) {
+	Object handler = Proxy.getInvocationHandler(annotation);
+	Field f;
+	try {
+		f = handler.getClass().getDeclaredField("memberValues");
+	} catch (NoSuchFieldException | SecurityException e) {
+		throw new IllegalStateException(e);
+	}
+	f.setAccessible(true);
+	Map<String, Object> memberValues;
+	try {
+		memberValues = (Map<String, Object>) f.get(handler);
+	} catch (IllegalArgumentException | IllegalAccessException e) {
+		throw new IllegalStateException(e);
+	}
+	Object oldValue = memberValues.get(key);
+	if (oldValue == null || oldValue.getClass() != newValue.getClass()) {
+		throw new IllegalArgumentException();
+	}
+	memberValues.put(key, newValue);
+	return oldValue;
+}
+
+Field[] fields = xxx_Class.class.getDeclaredFields();
+for (Field field: fields) {
+	String fieldName = field.getName();
+	String newAnnotationValue = xxx_value;
+	final xxx_Annotation annotation = field.getAnnotation(xxx_Annotation.class);
+	System.out.println(annotation.xxx_Annotation_Property()); // xxx_Annotation_Property为注解的某个属性的key, 比如CsvBindAndJoinByName注解的column属性
+	changeAnnotationValue(annotation, "xxx_Annotation_Property", newAnnotationValue);
+	System.out.println(annotation.xxx_Annotation_Property()); // 打印新值
+}
+	
+ZipFile zipFile = new ZipFile(fileName);
+ZipParameters parameters = new ZipParameters();
+parameters.setCompressionMethod(CompressionMethod.DEFLATE);
+parameters.setCompressionLevel(CompressionLevel.NORMAL);
+zipFile.addFile(file1, parameters);
+zipFile.addFiles(fileList, parameters);
+
+FileUtils.readFileToByteArray(file1);
+
+map.getOrDefault(key, defaultValue);
+
+.stream().filter().peek().findFirst.orElse();
+Optional.ofNullable().map().filter().map().orElse();
+
+public static void writeCsvLine(List<String> headers, File csvFile) {
+	log.info("call writeCsvLine");
+	if (csvFile == null) {
+		return;
+	}
+	try (
+			OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(csvFile, false), StandardCharsets.UTF_8);
+			CSVWriter writer = new CSVWriter(osw, CSVWriter.DEFAULT_SEPARATOR)
+	) {
+		writer.writeNext(headers.toArray(new String[headers.size()]));
+	} catch (IOException e) {
+		log.error("writeCsvLine failed: ", e);
+	}
+}
+
+public long copySqlResultToCsv(String selectSql, String csvPath) throws SQLException {
+	Connection connection = null;
+	try (FileOutputStream outputStream = new FileOutputStream(csvPath, true)) {
+		connection = getConnection();
+		BaseConnection baseConnection = (BaseConnection) connection.getMetaData().getConnection();
+		CopyManager copyManager = new CopyManager(baseConnection);
+		// 不带HEADER, 单独写入
+		String copySql = String.format("COPY (%s) TO STDOUT WITH DELIMITER ',' CSV", selectSql);
+		return copyManager.copyOut(copySql, outputStream);
+	} catch (IOException | SQLException e) {
+		log.error("copySqlResultToCsv failed: ", e);
+		throw new SQLException("copySqlResultToCsv failed");
+	} finally {
+		FileUtils.close(connection);
+	}
+}
+
+COPY (select * from contacts where age < 45) TO 'C:tmpyoung_contacts_db.csv'  WITH DELIMITER ',' CSV HEADER;
+
+Boolean.parseBoolean(); Boolean.getBoolean(); Boolean.valueOf();
+
+Response
+	.ok(new FileInputStream(zipFile))
+	.header("Content-Disposition", String.format("attachment; filename*=UTF-8''%s", URLEncoder.encode(reportFileName, "UTF-8")))
+	.build();
+	
+
+WhiteboxImpl.invokeMethod(instance, methodToExecute, arguments);
+
+pom文件jacoco配置:
+<plugin>
+	<groupId>org.jacoco</groupId>
+	<artifactId>jacoco-maven-plugin</artifactId>
+	<version>${jacoco.version}</version>
+	<configuration>
+		<!--此处用于指定哪些类会从单元测试的统计范围中被剔除-->
+		<excludes>
+			<!--屏蔽所有文件夹中Mock开头的文件-->
+			<exclude>**/Mock*.*</exclude>
+			<!--屏蔽所有mock文件夹及其子文件夹中的文件-->
+			<exclude>**/mock/**/*.*</exclude>
+			...
+		</excludes>
+	</configuration>
+	<executions>
+		...
+	</executions>
+</plugin>
+
+PowerMockito mock private method：
+// 由于是对本类的私有方法进行模拟, 所以需要在PrepareForTest后面加MyClass.class, 同时需要使用spy来模拟一个对象
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({MyClass.class})
+MyClass myClass = PowerMockito.spy(new MyClass())
+PowerMockito.doReturn(“mockedResult”).when(myClass, “privateMethod”);
+
+PowerMockito call private method:
+//1
+Method method = PowerMockito.method(DemoService.class, "callPrivateMethod", String.class);
+String result = (String) method.invoke(demoService, param_xxx);
+//2
+String result1 = Whitebox.invokeMethod(demoService, "callPrivateMethod", param_xxx);
+
+Mock retrofit call:
+Call call = PowerMockito.mock(Call.class);
+when(xxxRetrofitService.queryxxx(Mockito.anyString())).thenReturn(call);
+when(call.execute()).thenReturn(Response.success(xxx));
+
+Mock new class:
+1. @PrepareForTest({DemoService.class})
+2. DemoService demoService = PowerMockito.mock(DemoService.class);
+3. PowerMockito.whenNew(DemoService.class).withNoArguments().thenReturn(demoService);
+PowerMockito.doNothing.when(demoService, "method_xxx", xxx);
+
+@Slf4j
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({Example.class, FileUtil.class, SpringContextBridge.class})
+public class ExampleTest {
+
+    private Example example;
+    @Mock private ExampleService exampleService;
+    @Mock private LogService logService;
+    @Mock private HttpServletRequest request;
+
+    @Before
+    public void setUp() throws Exception {
+        example = new Example();
+        Whitebox.setInternalState(example, exampleService);
+        Whitebox.setInternalState(example, logService);
+		// mockStatic之后, 无法真正调用FileUtil里的方法了, 谨慎选择是否在setUp中mock, 还是在需要的test中mock
+		PowerMockito.mockStatic(FileUtil.class, SpringContextBridge.class);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+    }
+
+    @Test
+    public void test_method1_when_condition1_should_return_result1() throws Exception {
+		PowerMockito.when(exampleService.method1(Mockito.anyString())).thenReturn(...);
+		PowerMockito.doNothing().when(exampleService, "method3", any());
+		//获取的路径是.../target/test-classes/mock-file/file1.csv, 源文件从test/resources下面相应目录拷贝得来
+        String path = getClass().getClassLoader().getResource("mock-file/file1.csv").getPath();
+        PowerMockito.when(ReflectUtil.newFileInputStream(Mockito.anyString())).thenReturn(new FileInputStream(path));
+        PowerMockito.whenNew(Class1.class).withAnyArguments().thenReturn(PowerMockito.mock(Class1.class));
+        Result res = example.method1(..);
+        Assert.assertEquals(...);
+        Assert.assertNotNull(res.getData());
+    }
+	
+	@Test(expected = Exception1.class)
+    public void test_method1_when_condition2_should_throw_exception1() throws Exception {
+		// PowerMockito.doThrow(new Exception1("xxx")).when(ExampleService.class, "method1");
+		example.method(...);
+	}
+	
+	@Test(expected = Exception1.class)
+    public void test_method1_when_condition3_should_return_result2() throws Exception {
+		Example example1 = new Example() {
+			public boolean method2(...) {
+				log.info("do nothing");
+				return false;
+			}
+		}
+		example1.method(...);
+	}
+	
+}
+
+private final String RESOURCE_PATH = System.getProperty("user.dir") + File.separator + "src" + File.separator +
+            "main" + File.separator + "resources";
+private final String TEST_RESOURCE_PATH = System.getProperty("user.dir") + File.separator + "src" + File.separator +
+            "test" + File.separator + "resources";
+
+后端分页:
+sql
+数据处理
+
+// 使用回调控制checkbox状态
+checkboxRelateCallback = (checkboxRelateCallbackInfo): Promise<any> => new Promise((resolve, reject) => {
+	console.log('checkboxRelateCallback: ', checkboxRelateCallbackInfo);
+	if (this.isCurrentPageSelected && checkboxRelateCallbackInfo.isSelectAllPage) {
+		resolve({isPortion: this.pageInfo.maxPageIndex !== 1, isChecked: true});
+	} else if (this.isAllPageSelected) {
+		if (this.uncheckedCells.size > 0) {
+			resolve({isPortion: true, isChecked: true});
+		} else {
+		resolve({isPortion: false, isChecked: true});
+		}
+	} else if (this.data.filter(row => row.isChecked === true).length > 0) {
+		if (this.data.filter(row => row.isChecked === false).length === 0) {
+			resolve({isPortion: false, isChecked: true});
+		} else {
+			resolve({isPortion: true, isChecked: true});
+		}
+	} else {
+	resolve({isPortion: false, isChecked: false});
+	}
+});
+
+Spring使用@PostConstruct需要搭配@Component等(包括衍生的@Controller、@Service、@Repository, 结合MVC的模式(对应Service、Controller、Dao))注解使用, 因为需要当前类被实例化后才能执行
+
+CPU慢, 请求不返回, 内存不回收, 导致内存溢出
+
+进入pod中指定container(-c container-xxx): kubectl exec -it nia-npa-nia-npa-schedule-4-4pc6z -c nia-npa-scheduler-sl sh -n ranoss
+
+// 统计元素个数时使用map.getOrDefault
+HashMap<Integer, Integer> map = new HashMap<>();
+for (int num : nums) {
+	map.put(num, map.getOrDefault(num, 0) + 1);
+}
+
+我们公司的微服务架构是什么?
+springboot/dropwizard + 自研的(服务注册发现 + 健康监测 + 等等)(没有使用dubbo, spark, spring cloud等提供的), 集成到镜像, 再部署
+
+可以出一道面试题：栈里面的元素在内存中是连续分布的么？
+这个问题有两个陷阱：
+陷阱1：栈是容器适配器，底层容器使用不同的容器，导致栈内数据在内存中是不是连续分布。
+陷阱2：缺省情况下，默认底层容器是deque，那么deque的在内存中的数据分布是什么样的呢？ 答案是：不连续的，下文也会提到deque。
+
+一个队列在模拟栈弹出元素的时候只要将队列头部的元素（除了最后一个元素外） 重新添加到队列尾部，此时在去弹出元素就是栈的顺序了
+
+递归的实现就是：每一次递归调用都会把函数的局部变量、参数值和返回地址等压入调用栈中，然后递归返回的时候，从栈顶弹出上一次递归的各项参数，所以这就是递归为什么可以返回上一层位置的原因。
+
+获取csv文件编码格式:
+Charset charset = Charset.forName(detectCsvCharset(path.toFile().getAbsolutePath()));
+...
+public static final String CHARSET_GBK = "GBK";
+public static final String CHARSET_UTF8 = "utf-8";
+
+public static String detectCsvCharset(String filePath) {
+	String defaultCharset = CHARSET_UTF8;
+
+	try (BufferedReader br = Files.newBufferedReader(Paths.get(filePath)); //默认StandardCharsets.UTF_8
+		 CSVReader csvReader = new CSVReader(br, ',')) {
+		String[] line = csvReader.readNext();
+		if (line != null && line.length > 0) {
+			log.info(line[0]);
+		}
+	} catch (IOException exp) {
+		log.error(exp.getMessage(), exp);
+		defaultCharset = CHARSET_GBK;
+	}
+
+	return defaultCharset;
+}
+
+修改控制节点hosts文件, 增加制品所在环境的ip和域名映射: 
+本地:ping artsz.zte.com.cn, 获取ip, 如: x.x.x.x; 在控制节点:vi /etc/hosts, Shift+G, 在文件末尾增加配置: x.x.x.x artsz.zte.com.cn, 保存退出
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Outter {
+    
+    private Inner1 inner1;
+	private Inner2 inner2;
+	...
+
+    @Data
+	@NoArgsConstructor
+    @AllArgsConstructor
+    public static class Inner1 {
+		...
+    }
+
+    @Data
+	@NoArgsConstructor
+    @AllArgsConstructor
+    public static class Inner2 {
+        ...
+    }
+}
+...
+new Outter(new Outter.Inner1(xxx), new Outter.Inner2(xxx));
+
+Objects.requireNonNull(obj).
+
+int index = list.indexOf(obj);
+
+retrofit2.Response<...> response = ....execute();
+response.isSuccessful(), response.body(), response.errorBody()
+@ServiceHttpEndPoint, @Headers, @MultiPart, @GET, @POST, @Header, @Path, @Query, @Body, @Part
+
+
+javax.ws.rs.core.Response
+Respoonse.status(xxx).entity(xxx).build(), Response.ok().build(), Response.serverError().build(), ..., Response.notAcceptable().build()
+@GET, @POST, @Path, @Consumes, @Produces, @Context, @HeaderParam, @PathParam, @QueryParam, @BeamParam, @FormDataParam
+
+if (isWriteBom) {
+	fos.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
+}
+fin = new FileInputStream(filePath);
+long skipLen = fin.skip(3L);  <=>  bomInputStream = new BOMInputStream(fin);
+
+check in
+
+方法论?
+
+object to json:
+	public static String getJsonFromObj(Object object) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			return objectMapper.writeValueAsString(object);
+		} catch (JsonProcessingException e) {
+			log.error(e.toString(), e);
+			return null;
+		}
+	}
+
+
+json to object:
+	public static <T> T getObjFromJson(String message, Class<T> targetClass) {
+		try {
+			return (new ObjectMapper()).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(message, targetClass);
+		} catch (IOException e) {
+			log.error(e.toString(), e);
+			return null;
+		}
+	}
+
+convert map to bean(convert bean to map 也是类似的写法)
+public static Object convertMapToBean(Map map, Class clazz) throws JsonProcessingException {
+	ObjectMapper mapper = new ObjectMapper();
+	return mapper.readValue(mapper.writeValueAsString(map), clazz);
+}
+
+
+private volatile boolean isLastTaskFinished = false;
+...
+	// 遍历文件内容, 放到线程池进行处理
+	for (int i = 0; i < validMeList.size(); i++) {
+		List<Map<String, String>> currentMeActionInfo = actionInfoByMe.get(validMeList.get(i));
+		if (CollectionUtils.isEmpty(currentMeActionInfo)) {
+			continue;
+		}
+		while(true) {
+			// 判断线程池未满再放入, 防止满了触发拒绝策略, 导致任务丢失
+			// 当然, 给线程池设置很大的任务队列, 一次性塞进去, 也是一种方式
+			if (executor.getActiveCount() < executor.getMaximumPoolSize()) {
+				// 在线程池内部(代码最后面)判断是否最后一个任务, 如果是, 把isLastTaskFinished置为true
+				executor.execute(new UpdateInterferencePosTaskInfoExecutor(moActionTask, currentMeActionInfo, i == validMeList.size() - 1));
+				break;
+			}
+		}
+		// 另一种写法
+		while(executor.getActiveCount() >= executor.getMaximumPoolSize()) {
+			Thread.sleep(100);
+		}
+		executor.execute(new UpdateInterferencePosTaskInfoExecutor(moActionTask, currentMeActionInfo, i == validMeList.size() - 1));
+	}
+	while (true) {
+		// 判断线程池任务都已执行, 同时最后一个任务执行完之后(在finally里面设置isLastTaskFinished), 再关闭线程池, 并使用kafka通知后续流程
+		if (executor.getActiveCount() == 0 && isLastTaskFinished) {
+			// executor.shutdown(); // 放到finally里面
+			new KafkaUtil().sendResponse(moActionTask.getTopicname(), JsonUtil.getJsonFromObj(constructKafkaResponseTask(moActionTask, true, false)));
+			break;
+		}
+	}
+	finally {
+		executor.shutdown();
+	}
+	
+	UpdateInterferencePosTaskInfoExecutor implements Runnable...
+	
+	Future<?> future = executor.submit... <--> implements Callable...
+	
+	
+
+
+责任链模式使用示例:
+	
+	// 先定义接口
+	// 如果在类中就用private
+	private/public interface Condition {
+		boolean match(...);
+		Object action(...);
+	}
+	
+	// 再定义实现类
+	private/public FirstCondition implements Condition {
+		@Override
+		public boolean match(...) {
+			...
+		}
+		@Override
+		public Object action(...) {
+			...
+		}
+	}
+	private/public SecondCondition implements Condition {
+		@Override
+		public boolean match(...) {
+			...
+		}
+		@Override
+		public Object action(...) {
+			...
+		}
+	}
+	...
+	
+	// 定义责任链List
+	private List<Condition> conditionChain = Arrays.asList(
+		new FirstCondition(),
+		new SecondCondition(),
+		...
+	)
+	
+	// 责任链匹配
+	for (Condition condition : conditionChain) {
+		if (condition.match(param1, param2, ...)) {
+			res = condition.action(param1, ...);
+			break;
+			// return xxx;
+		}
+	}
+
+
+restful接口返回的若是Response<Map>, 则可以使用Map, List, List<Map>等来强转解析
+
+
+// 强转解析 + Optional判空
+if (res != null && res.isSuccessful() && res.body() != null) {
+	log.info("get resource model res.code: {}, res.body: {}", res.code(), res.body());
+	Map<String, Object> resModelMap = res.body();
+	checkNull(resModelMap);
+	if ("0".equals(resModelMap.get("code"))) {
+		// Map<String, Object> data = (Map<String, Object>) resModelMap.get("data");
+		// checkNull(data);
+		// List<Map<String, Object>> netypes = (List<Map<String, Object>>) data.get("netypes");
+		// checkNull(netypes);
+		// Map<String, Object> netypeMap = netypes.stream().filter(netypeItem -> StringUtils.equals((String) netypeItem.get("netype"), task.getNeType())).findFirst().orElse(null);
+		// checkNull(netypeMap);
+		// List<Map<String, Object>> subtypes = (List<Map<String, Object>>) netypeMap.get("subtypes");
+		// checkNull(subtypes);
+		// Map<String, Object> subtypeMap = subtypes.stream().filter(subtypeItem -> StringUtils.equals((String) subtypeItem.get("subtype"), task.getSubType())).findFirst().orElse(null);
+		// checkNull(subtypeMap);
+		// List<Map<String, Object>> motypes = (List<Map<String, Object>>) subtypeMap.get("motypes");
+		// Map<String, Object> motypeMap = motypes.stream().filter(motypeItem -> StringUtils.equals((String) motypeItem.get("motype"), task.getMoType())).findFirst().orElse(null);
+		Map<String, Object> motypeMap = Optional.ofNullable((Map<String, Object>) resModelMap.get("data"))
+				.map(data -> (List<Map<String, Object>>) data.get("netypes"))
+				.flatMap(netypes -> netypes.stream().filter(netypeItem -> StringUtils.equals((String) netypeItem.get("netype"), task.getNeType())).findFirst())
+				.map(netypeMap -> (List<Map<String, Object>>) netypeMap.get("subtypes"))
+				.flatMap(subtypes -> subtypes.stream().filter(subtypeItem -> StringUtils.equals((String) subtypeItem.get("subtype"), task.getSubType())).findFirst())
+				.map(subtypeMap -> (List<Map<String, Object>>) subtypeMap.get("motypes"))
+				.flatMap(motypes -> motypes.stream().filter(motypeItem -> StringUtils.equals((String) motypeItem.get("motype"), task.getMoType())).findFirst())
+				.orElse(null);
+		checkNull(motypeMap);
+		isTaskResModelValid = true;
+	}
+}
+
+
+前端页面截图时，如果有水印，可以点击F12找到对应请求api/oauth2/v1/waterprintinfo，鼠标点击该请求右键选择Block Request URL，再刷新以下页面就不显示水印了。
+
+
+排序compare: 
+从小到大: return a - b;  return a < b;
+从大到小: return b - a;  return a > b;
+
+// 小到大排序
+// 使用Integer内置比较方法，不会溢出
+Arrays.sort(points, (a, b) -> Integer.compare(a[0], b[0]));
+
+Arrays.sort(intervals, (a, b) -> a[1] - b[1];);
+
+
+sql优化where条件拼接查询效率的方法:
+1. 从where条件的and/or等改为in, 没有明显提升
+2. 增加索引, 理论上可以提高效率
+3. 建中间表, 把要查询的数据放进去(只放需要关联的key字段即可), 在跟要查询的数据表进行关联查询, 可以提高效率
+
+
+MyBatis/iBatis ScriptRunner, 执行sql脚本
+获取中台数据库实例的url/ip, 用户名, 密码等信息, 创建DataSource, 根据DataSource获取Connection
+
+
+run.sh中通过JAVA_OPTS设置jvm参数, 比如(参数从蓝图获取): 
+JAVA_OPTS="$JAVA_OPTS -Xms$MIN_DUMP_SIZE -Xmx$MAX_DUMP_SIZE $JAVA_GLOBAL_OPTS $JVM_GC_OPTS"
+
+
+redux使用:
+store.dispatch(xxx) // 状态分发(数据携带在状态中)
+store.getState() // 状态获取
+model, state, action, reducer
+
+
+动态调用/自动适配
+新增注解, 通过反射对新增注解的一批Class做自动发现autoDiscover, 存放到map中(key为注解的值, value为使用该注解的Class), 后续代码中可以通过map来获取不同的Class, 做到自动适配
+1. 新增注解
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MoType {
+
+    String value() default "";
+}
+2. 使用注解
+@MoType("NRPhysicalCellDU")
+public class NRPhysicalCellDUGisObject implements GisData {...}
+// 缓存类
+public class GisTypeMapper {
+
+    private static HashMap<String, Class<?>> moTypeClassMap = new HashMap<>();
+
+    public static void setClassMap(HashMap<String, Class<?>> map) {
+        moTypeClassMap = map;
+    }
+
+    public static Class<?> getGisType(String moType) {
+        Class<?> type = moTypeClassMap.get(moType);
+        if (type == null) {
+            throw new GisTypeNotExistsException(String.format("Gis type does not exist for moType=%s", moType));
+        }
+        return type;
+    }
+}
+3. 自动发现(auto discover)
+@PostConstruct
+public void autoDiscover() {
+	Reflections ref = new Reflections("com.zte.nia.npa.scheduler.bean.gis.input.types");
+	Set<Class<?>> classes = ref.getTypesAnnotatedWith(MoType.class);
+	HashMap<String, Class<?>> moTypeClassMap = new HashMap<>();
+	for (Class<?> clazz : classes) {
+		@SuppressWarnings({"unchecked", "ConstantConditions"})
+		Set<Annotation> annotations = ReflectionUtils.getAnnotations(clazz, annotation -> MoType.class.equals(annotation.annotationType()));
+		for (Annotation a : annotations) {
+			// 每个类有且仅有一个MoType注解
+			String moType = ((MoType) a).value();
+			moTypeClassMap.put(moType, clazz);
+			break;
+		}
+	}
+	GisTypeMapper.setClassMap(moTypeClassMap);
+}
+4. 通过motype从map中获取对应的Class
+Class<?> gisType = GisTypeMapper.getGisType(moType);
+
+window.history.back(); //后退前一个url, 调用该方法的效果等价于点击后退按钮或调用 history.go(-1)
+
+深拷贝:
+public LocalModel deepClone() throws IOException, ClassNotFoundException {
+	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	ObjectOutputStream oos = new ObjectOutputStream(baos);
+	FileUtils.checkPermission(oos);
+	oos.writeObject(this);
+	ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+	ObjectInputStream ois = new ObjectInputStream(bais);
+	return (LocalModel) ois.readObject();
+}
+
+map判空(null或者empty): MapUtils.isEmpty(map)
+
+try-with-resources内层stream不会被自动关闭
+
+angular的双向绑定会监听对象属性里面值的变化: [disabled]="this.currentRowData.id == '0000'"
+
+chrome浏览器的disabled状态会禁用元素的mouseenter事件，但是Firefox不会禁用元素的mouseenter, 所以导致了chrome里面在禁用状态的按钮不能显示popover
+如果想在按钮禁用时显示popover，可以在按钮外层包一个div，把popover放在外层的div上面就可以实现
+
+pgsql read-only transaction触发原因: 大量请求过来, 触发保护机制? 磁盘空间满了, 数据库变为read-only, 无法update
+
+最简版本流量控制: 比如10s两个请求, 两个线程线程池, 一次从队列取两个请求塞进去执行, 然后sleep(10000)
+
+为了让使用 JS 的库能够在 TypeScript 上使用，那么我们在导入的时候需要添加 @types
+
+本地调试时在yml配置log打印级别, 在level中设置默认级别, 在loggers里面设置某个包的级别, 两者组合. 比如DEBUG模式可以将level设置为DEBUG, 然后由于DEBUG模式日志太多, 甚至有反复刷日志的地方, 此时将kafka的日志级别调整为WARN, 那么将不会打印在控制台, 方便调试
+logging:
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  # level: INFO
+  level: DEBUG
+
+  # Logger-specific levels.
+  loggers:
+    # Sets the level for 'com.example.app' to DEBUG.
+    # com.example: DEBUG
+	org.apache.kafka: WARN
+	
+
+本地调试环境:
+软件安装:
+	安装kafka(kafka&zookeeper, windows版本是否可行? linux版本? bat脚本/shell脚本启动? 源码jar包放到java工程, 新建main函数启动? 修改zookeeper的properties配置文件的端口号, 防止安全扫描出漏洞(针对特定的一些端口, 包含8080); 异常结束进程, 清日志再启动)
+	安装postgresql, 安装数据库可视化软件(如DBeaver, Navicat)
+修改代码适配windows本地执行环境: 
+	修改路径, windows不支持太长的路径(两百多); windows下File.separator自动适配为\, 可能要手动设置
+	手动控制启动项(比如postconstruct改成appinit自定义控制启动)
+	修改文件读取方式, 从本地mock路径, mock文件
+	设置代理proxy, 可以转发请求到外部应用接口
+	
+如何mock环境上的外部异步数据获取:
+	借助环境上的微服务, 写一个rest接口, 监听相应kafka, 去ftp拉取数据, 再发kafka通知本地服务, 获取ftp数据
+	
+
+maven插件打包fat-jar/thin-jar:
+	1. 使用maven-jar-plugin和maven-dependency-plugin
+	2. 使用maven-assembly-plugin (推荐)
+	3. 使用maven-shade-plugin
+	4. 使用onejar-maven-plugin
+	5. 使用spring-boot-maven-plugin
+	6. 使用tomcat7-maven-plugin
+	
+lombok自动生成hashCode和equals
+@EqualsAndHashCode(of = {"name", "age"});
+
+idea自动补全实现代码:
+	@Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+		//上面两行也可以用if (o instanceof Person)条件, 可能内部是类似的实现
+        SceneModelWrapper that = (SceneModelWrapper) o;
+        return Objects.equals(version, that.version) && Objects.equals(models, that.models);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(version, models);
+    }
+	
+new TreeSet<>(Comparator.comparing(GroupItem::getGroupId));
+
+poi shiftColumns:
+worksheet.shiftColumns(0,13,1);
+
+校验规则判断 + 降低圈复杂度
+1. if-else
+	if (rule1) {
+	} else ...
+2. Rule抽象类, Rule1 extends Rule
+	List<Rule> rules = ...;
+	for (Rule rule: rules) {
+	}
+3. 使用Pair, 判断 + 结果/返回, 组成pair
+	Pair.of(left, right), 作为一个rule, left和right可以搭配Predicate和Supplier使用, 引入函数/lamda来判断输入条件和组装返回结果
+	List<Pair<Predicate<Task>, Supplier<String[]>>> rules;
+	this.rules = ImmutableList.<Pair<Predicate<Task>, Supplier<String[]>>>builder()
+		.add(Pair.of(
+				t -> t == null,
+				() -> new String[]{
+						EMPTY_STRING,
+						I18nManager.getLabelValue(MESSAGE_FAILURE),
+						I18nManager.getLabelValue(ERROR_MESSAGE_REPORT_FAILURE_CASE1),
+				}
+		))
+		.add(Pair.of(
+				t -> t.getTask_status() == 0,
+				() -> new String[]{
+						EMPTY_STRING,
+						I18nManager.getLabelValue(MESSAGE_FAILURE),
+						I18nManager.getLabelValue(ERROR_MESSAGE_REPORT_FAILURE_CASE2),
+				}
+		))
+		.add(...)
+		.build();
+		
+	public Optional<String[]> invalidRules(Task task) {
+        for (Pair<Predicate<Task>, Supplier<String[]>> rule : this.rules) {
+            final Predicate<Task> left = rule.getLeft();
+            final Supplier<String[]> right = rule.getRight();
+            if (left.test(task)) {
+                return Optional.of(right.get());
+            }
+        }
+        return Optional.empty();
+    }
+	
+	Optional<String[]> invalid = rules.invalidRules(task);
+	if (invalid.isPresent()) {
+		writer1.writeNext(invalid.get());
+		return;
+	}
+	
+点击button实现上传文件:	
+<button type="button" class="plx-btn plx-btn-xs" placement="top" [disabled]="disabled" (click)="mockClickInput(inputOfImport)">{{'Button.IMPORT' | translate}}</button>
+
+<input #inputOfImport hidden type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+  (change)="import($event)" />
+
+mockClickInput(inputRef) {
+	inputRef.click();
+}
+
+import($event) {
+
+	let file = this.getChosenFile($event);
+	if (!file) {
+		return;
+	}
+
+
+	this.importing = true;
+	let validateResult = this.validateFile(file);
+
+	if (!validateResult) { // file is not csv or excel
+		this.setFeedbackToError(this.translate.instant('Info.IMPORT_ERROR_TIP'));
+
+		$event.target.value = ''; //if not clear, choose same file again wont work
+		this._tableLoading = false;
+		this.importing=false;
+	} else if (file['size'] > maxFileSize) { // file size is too large
+		this.setFeedbackToError(this.translate.instant('Info.MAX_FILE_SIZE'));
+
+		$event.target.value = ''; //if not clear, choose same file again wont work
+		this._tableLoading = false;
+		this.importing=false;
+	} else { //begin to read file
+		this.fileName = file.name;
+		this.currentState = IMPORTING;
+
+		this.appService.importFile(file).subscribe((data) => {
+			if (data.code == '0') {
+				this.currentState = FINISHED_WITH_ALL_SUCCEED;
+				this._tableLoading = true;
+				this.readData()
+			}
+			else if(data.message){
+				this.setFeedbackToError(data.message)
+			}
+			else{
+				this.currentState = FINISHED_WITH_FAILED;
+			}
+			this.importing = false;
+
+		});
+		$event.target.value = '';
+	}
+}
+
+private getChosenFile($event) {
+	let file;
+	// jian rong Firefox
+	if ($event && $event.srcElement && $event.srcElement.files[0]) {
+		file = $event.srcElement.files[0];
+	} else if ($event && $event.target && $event.target.files[0]) {
+		file = $event.target.files[0];
+	}
+	return file;
+}
+
+private validateFile(file) {
+	if (!!!file) {
+		return false;
+	}
+	let filename = file.name;
+	let fileType = filename.substring(filename.lastIndexOf(".") + 1);
+	if (!!!(file.type) && (file.type.includes('xlsx') || file.type.includes('xls'))) {
+		return true;
+	}
+	else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+		&& file.type === 'application/vnd.ms-excel') {
+		return true;
+	}
+	else if (fileType === 'xlsx' || fileType === 'xls') {
+		return true;
+	}
+	return false;
+}
+
+private setFeedbackToError(msg: string) {
+	this.currentState = ERROR;
+	this.errorMsg = this.translate.instant('Info.upload_error') + ", " + this.translate.instant(msg);
+	this.clearResetFeedbackAreaTimer();
+	this.resetFeedbackAreaTimer = setTimeout(() => {
+		this.currentState = INIT;
+	}, 5000);
+}
+
+数字转大写字母:
+System.out.println((char) (Integer.toString(2).charAt(0)-('1'-'A'))); //只能转一位
+(char) (columnIndex + 'A')
+
+git命令行, 临时修改jdk版本/环境变量:
+echo $JAVA_HOME
+echo $PATH
+export JAVA_HOME="/c/Program Files/Java/jdk1.8.0_181"
+export PATH=$JAVA_HOME/bin:$PATH
+java -version
+
+UT执行时, 文件分隔符差异问题:
+比如Paths等类的方法, 对文件路径的解析, 比如FileSystems.getDefault().getPath(first, more), 这里使用的是当前的文件系统, 那么路径中如果不是严格的使用File.seperator拼接的话, 本地执行UT, 可能找不到文件
+可以使用new File(path).getAbsolutePath()来解决
+File类是可以兼容不同的文件系统的
+
+使用PreparedStatement, 可以防止收到sql注入攻击, 但是无法避免sql语句的执行. 如果判断sql注入的标准是"构造存在sql注入的参数, 最终有sql执行, 而不看最终sql的是否真实存在sql注入问题", 那么还是要使用类似"过滤输入内容，校验字符串"的方式来提前拦截sql语句的执行.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
