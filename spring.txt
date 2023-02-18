@@ -1,0 +1,108 @@
+https://blog.csdn.net/qq_36317312/article/details/126110873
+JavaWeb常用框架:
+
+Spring管理Bean时常用的一些注解：
+	@ComponentScan用于声明扫描策略, 通过它的声明, 容器就知道要扫描哪些包下带有声明的类, 也可以知道哪些特定的类是被排除在外的. 
+	@Component、@Repository、@Service、@Controller用于声明Bean, 它们的作用一样, 但是语义不同. @Component用于声明通用的Bean, @Repository用于声明DAO层的Bean, @Service用于声明业务层的Bean, @Controller用于声明视图层的控制器Bean, 被这些注解声明的类就可以被容器扫描并创建. 	
+	@Autowired、@Qualifier用于注入Bean, 即告诉容器应该为当前属性注入哪个Bean. 其中, @Autowired是按照Bean的类型进行匹配的, 如果这个属性的类型具有多个Bean, 就可以通过@Qualifier指定Bean的名称, 以消除歧义. 	
+	@Scope用于声明Bean的作用域, 默认情况下Bean是单例的, 即在整个容器中这个类型只有一个实例. 可以通过@Scope注解指定prototype值将其声明为多例的, 也可以将Bean声明为session级作用域、request级作用域等等, 但最常用的还是默认的单例模式. 
+	@PostConstruct、@PreDestroy用于声明Bean的生命周期. 其中, 被@PostConstruct修饰的方法将在Bean实例化后被调用, @PreDestroy修饰的方法将在容器销毁前被调用. 
+
+Spring 内置的 @Autowired 以及 JDK 内置的 @Resource 和 @Inject 都可以用于注入 Bean. 
+
+使用ApplicationContext获取bean对象:
+@Component
+public class SpringContextBridge implements ApplicationContextAware {
+
+    private static ApplicationContext applicationContext;
+
+    public static <T> T getService(Class<T> serviceClazz) {
+        if (applicationContext == null) {
+            throw new ApplicationContextNotReadyException();
+        }
+        return applicationContext.getBean(serviceClazz);
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        SpringContextBridge.applicationContext = applicationContext;
+    }
+}
+
+AOP（Aspect Oriented Programming）是面向切面编程, 它是一种编程思想, 是面向对象编程（OOP）的一种补充. 面向对象编程将程序抽象成各个层次的对象, 而面向切面编程是将程序抽象成各个切面. 所谓切面, 相当于应用对象间的横切点, 我们可以将其单独抽象为单独的模块. 
+	*连接点（join point）：对应的是具体被拦截的对象, 因为Spring只能支持方法, 所以被拦截的对象往往就是指特定的方法, AOP将通过动态代理技术把它织入对应的流程中. 
+	*切点（point cut）：有时候, 我们的切面不单单应用于单个方法, 也可能是多个类的不同方法, 这时, 可以通过正则式和指示器的规则去定义, 从而适配连接点. 切点就是提供这样一个功能的概念. 
+	*通知（advice）：就是按照约定的流程下的方法, 分为前置通知、后置通知、环绕通知、事后返回通知和异常通知, 它会根据约定织入流程中. 
+	*目标对象（target）：即被代理对象. 
+	*引入（introduction）：是指引入新的类和其方法, 增强现有Bean的功能. 
+	*织入（weaving）：它是一个通过动态代理技术, 为原有服务对象生成代理对象, 然后将与切点定义匹配的连接点拦截, 并按约定将各类通知织入约定流程的过程. 
+	*切面（aspect）：是一个可以定义切点、各类通知和引入的内容, SpringAOP将通过它的信息来增强Bean的功能或者将对应的方法织入流程. 
+
+AOP可以有多种实现方式, 而Spring AOP支持如下两种实现方式
+	*JDK动态代理：这是Java提供的动态代理技术, 可以在运行时创建接口的代理实例. Spring AOP默认采用这种方式, 在接口的代理实例中织入代码. 
+	*CGLib动态代理：采用底层的字节码技术, 在运行时创建子类代理的实例. 当目标对象不存在接口时, Spring AOP就会采用这种方式, 在子类实例中织入代码. 
+
+应用场景：应用可以直接使用AOP的功能, 设计应用的横切关注点, 把跨越应用程序多个模块的功能抽象出来, 并通过简单的AOP的使用, 灵活地编制到模块中, 比如可以通过AOP实现应用程序中的日志功能；在Spring内部, 一些支持模块也是通过Spring AOP来实现的, 比如事务处理. 从这两个角度就已经可以看到Spring AOP的核心地位了. 
+
+    @AfterReturning(
+            pointcut = "execution(* com.zte.ume.nia.qualcommon.resources.TaskManagementResource.initiateTask(..)) && args(taskidUI, httpServletRequest)",
+            returning = "res"
+    )
+    public void pushWebSocketMessageAfterTaskInitiate(String taskidUI, HttpServletRequest httpServletRequest, ResponseWrapper res) {
+        log.info("call pushWebSocketMessageAfterTaskInitiate");
+        if (res.isCode0()) {
+            // websocket推送刷新任务表消息
+            RefreshTaskTableWSServer.sendInfo("common_task_all", String.format("{\"taskidUI\": \"%s\", \"taskStatus\": %d}", taskidUI, TASK_STATUS_RUNNABLE));
+        }
+    }
+
+Spring 框架中用到了哪些设计模式？
+	1. 工厂设计模式: Spring使用工厂模式通过BeanFactory、 ApplicationContext创建bean对象;
+	2. 代理设计模式: Spring AOP功能的实现;
+	3. 单例设计模式: Spring中的Bean默认都是单例的;
+	4. 模板方法模式: Spring中jdbcTemplate、hibernateTemplate 等以Template结尾的对数据库操作的类,它们就使用到了模板模式;
+	5. 包装器设计模式:我们的项目需要连接多个数据库,而且不同的客户在每次访问中根据需要会去访问不同的数据库. 这种模式让我们可以根据客户的需求能够动态切换不同的数据源;
+	6. 观察者模式: Spring 事件驱动模型就是观察者模式很经典的一个应用;
+	7. 适配器模式: Spring AOP的增强或通知(Advice)使用到了适配器模式、SpringMVC 中也是用到了适配器模式适配Controller. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
