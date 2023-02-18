@@ -1,0 +1,190 @@
+maven command:
+	mvn clean package -Dmaven.test.skip=true
+	mvn clean package site
+	mvn dependency:tree > d:/a.txt
+	mvn dependency:tree -Dverbose -D outputFile=dependency_tree.txt // 生成依赖树时, 加上verbose参数, 可以查看更加具体和冗余的依赖树信息
+	
+
+npm command:
+	npm list/ls/ll
+	npm update
+	
+	ng generate service dir/service1
+	
+	
+git command:
+	revert one file (with commit):
+		git log fileName
+		git log --oneline -number fileName
+		git reset commit fileName
+		git commit -m "desc"
+		git checkout fileName
+		git push origin master
+		
+	revert one file (with local code):
+		git log --oneline -number fileName
+		git reset commit fileName
+		git checkout fileName
+		git reset origin/master
+	
+	git reset --hard commit-id
+	git reset origin/master
+	
+	git branch -D dev
+	git checkout -b dev
+	
+	merge branch master to bugfix-V1:
+		git pull origin master
+		git reset origin/bugfix-V1
+		git reset --mixed
+		git add .
+		git commit -m "xxx"
+		git review -Rv bugfix-V1
+		
+	git restore --staged a.txt
+	
+	// 找出真凶
+	git blame filename
+	git blame -L n1,n2 filename
+	
+	git show commit_id  // 查看提交修改内容
+	git show --raw commit_id  // 查看提交修改文件列表
+	git log --stat  // 查看所有提交记录的修改文件信息
+	
+	git merge
+	git rebase -i
+	
+	// git config 查看/修改/删除
+	git config --global -l
+	git config --global http.version
+	git config --global http.version HTTP/1.1
+	git config --global --unset http.version
+	
+	//创建一个本地分支, 关联远端分支
+	git checkout -b release32
+	git branch release32 -u origin/release-V16.22.32
+	//查看
+	git branch -vv
+	
+	
+linux command:
+	"管道"
+	cat nia-qualcommon-service.log | grep '45eae7e2-3287-4712-b920-823298ab4847' | grep -e 'Stop' -e 'Initiate'
+	head -n
+	tail -n
+	find . -name oki-cli*
+	setsid  sh push-menu-nii.sh > push-menu-nii.log
+	du -sh *
+	du -s | sort -nr: 倒序排大小, 可能支持du -sh, 可能不支持h
+	df -h
+	chmod 777 file
+	chown root file/dir
+	chown root: file/dir
+	chown user1:group1 file/dir
+	vi, lineIndex + shift + G, gg, :$ 跳到文件最后一行, :0或:1 跳到文件第一行, :n 就可以定位到任意行n
+	wc -l xxxx.csv
+	ls | wc -l
+	lsof -n|grep u31 -> 查看句柄
+	mkdir java1 java2 java3    //在当前文件夹下一次创建 java1 java2 java3 文件夹
+	mkdir -p aaa/bbb/ccc    //建立aaa/bbb/ccc这样的层级目录
+	mkdir -p src/{a,b,c,d}/img        //建立目录src，其中含有4个文件夹a, b, c, d，且这4个文件都含有一个img文件夹
+	mkdir -vp scf/{lib/,bin/,doc/{info,product},logs/{info,product},service/deploy/{info,product}}    //创建项目的目录结构
+	rename -v 's/img_(\d{4})\.jpeg/dan_$1.jpg/' *.jpeg
+	/etc/hosts
+	/root/.ssh/known_hosts
+	ps -ef
+	kill -3 pidxxx
+	测试ip端口:
+		telnet ip port
+		echo >/dev/tcp/ip/port //无显示就正常
+		ssh -v -p port root@ip //refused则不通
+		wget ip:port //refused则不通
+		curl -v ip:port //refused则不通
+	grep -rn 'xxx' filePath | grep ... > 1.log
+	grep -rn 'xxx' filePath | grep ... >> 1.log
+	ls -ltr | grep xxx
+	ls -ltr --full-time	
+	sleep 1d
+	tar cvzf xxx.tar.gz a.log b.log c.log d*.log
+	chown pict:pict xxx.tar.gz
+	命令嵌套: cp `find . -name *.csv` /home/ubuntu/csv
+	
+
+kafka command:
+	./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic zenap_pm_model_change --from-beginning
+	./kafka-console-consumer.sh --help
+	./kafka-topic.sh --help
+
+
+docker/k8s command:
+	kubectl exec -it `kubectl get pods -n ranoss -o wide|grep nia-qualcommon-service|awk '{print$1}'` /bin/sh -n ranoss
+	kubectl -n ranoss exec -it `kubectl get pod -n ranoss | grep npa-schedule | awk '{print $1}'` sh
+	kubectl get pods -n ranoss -o wide |grep eia-taskmanager
+	kubectl get pods -n ranoss | grep nia-npa-schedule | awk '{print $1}' | xargs -i kubectl cp ranoss/{}:/home/zenap/niaq/xxx /home/pict/xxx
+	从控制节点进入pvc目录:
+		kubectl get pvc -n ranoss -o wide|grep pvcname-xxx
+		find / -type d -name pvcid-xxx
+		cd dir-xxx
+	
+	docker ps|grep -e nia-npa -e nia-q|grep sl
+	// \为转义字符
+	docker ps|grep -e nia-npa -e nia-q|grep '\-sl'
+	
+	docker logs --since="2021-06-10T10:36:00" CONTAINER_ID
+	docker logs -f -t --since="2021-06-10T10:36:00" --tail=100 CONTAINER_ID
+	docker logs --since 30m CONTAINER_ID
+	docker logs CONTAINER_ID > xxx.log
+	
+	docker ps|grep xxx
+	docker run -d yyy
+	docker exec -it zzz sh
+	//使用root权限进入容器
+	docker exec -it -u root 52cf sh
+	
+	docker inspect:
+		docker inspect --format='{{.LogPath}}' $INSTANCE_ID //查找docker log文件路径
+	
+	kubectl -n ranoss get pods | grep nia-npa-schedule | awk '{print $1}' | xargs -i kubectl cp ranoss/{}:源目录 目标目录
+	kubectl -n ranoss get pods | grep nia-npa-schedule | awk '{print $1}' | xargs -i kubectl cp ranoss/{}:/home/zenap/niaq/result/nii_interference_analysis/{taskid}/ 指定目录
+	kubectl -n opcs cp ftpv3-9e315565-bb17-4edd-b954-0adbabf83b69-0:/home/zenap/ftpserver/datas/data/ict/pm-history-query-ms/query/ /home/pict/pm-history-query-result/
+	
+	use -c to specify container name (in a multi container pod): -c container-name
+		kubectl exec -it nia-npa-nia-npa-schedule-4-4pc6z -c nia-npa-scheduler-sl sh -n ranoss
+		kubectl cp my-file my-pod:my-file -c my-container-name
+			kubectl get pods -n ranoss | grep nia-qualcommon-service | awk '{print $1}' | xargs -i kubectl cp ranoss/{}:/home/zenap/ume-log/nia-qualcommon-service-ms/ ./tmp -c nia-qualcommon-service-sl
+			kubectl get pods -n ranoss | grep nia-qualcommon-service | awk '{print $1}' | xargs -i kubectl cp ranoss/{}:/home/zenap/ume-log/nia-qualcommon-service-ms/nia-qualcommon-service.log ./tmp/nia-qualcommon-service.log -c nia-qualcommon-service-sl
+
+wget/curl command:
+	wget -qO- "http://127.0.0.1:8080/api/iom-model/v1/iomservicelist"
+	wget -qO- "http://iom-model-ranoss:8080/api/iom-model/v1/iomservicelist"
+	wget -qO- "http://nia-qualcommon-service-ranoss:12500/api/nia-qualcommon-service/v1/tasks"
+	curl --location --request GET 'http://193.101.2.149:12372/api/configcenter-configserver/v1/getProperty/ran-global-paras/ran.scenario'
+	curl --location --request DELETE "http://nia-qualcommon-service-ranoss:12500/api/nia-qualcommon-service/v1/tasks/f30987de-75a3-4162-9d58-e9228879c668"
+	curl -k -H "Content-Type:application/json" -X GET "https://admaip:8889/dataprocess/provincecodelist"
+	curl --location --request POST 'http://vmax-o-portal/inner/upload/menufile' \
+		 --form 'filename=menu.zip' \
+		 --form 'file= @./menu.zip' \
+		 --form 'description=test'
+	curl -X POST http://nia-npa-arproxy-v1:8099/api/nia-npa-arproxy/v1/dataPre -H 'Content-Type: application/json' -d '{"taskidui": "326587c1-595b-4399-a939-828f01565283", "workflowjobid": "6238", "workflowname": "receive_view_mrsrc_data", "parametertemplateinfo": "", "calmodelinfo": {"netype": "ITBBU", "motype": "NRPhysicalCellDU", "arithmeticname": "view_mrsrc_data", "casetype": "default", "arithmetictype": "", "interfacetype": "restful", "interfaceurlpath": "", "arithmeticlang": 1, "arithmeticprocessname": "/home/zenap/niaq/nii_interference_analysis", "arithmeticcalltype": "asyc", "arithmeticcalltopicname": "RANUME_NIA_NII_ANALYSIS", "srcdatamodelinfo": {"pmhistorydatamodel": {"queryid": "", "querytype": 0, "netype": "ITBBU", "motype": "NRPhysicalCellDU", "indicators": ["100110109"], "indicatorsposition": [0], "timescope": {"fromtime": "2021-10-24 00:00:00", "endtime": "2021-10-24 24:00:00", "granularity": 86400, "timespanfilter": "", "timezonetype": 0, "timezone": "UTC"}, "locationscope": {"scopetype": "common", "commonscope": {"filterlayer": "all", "locations": []}, "groupscope": ["NA"], "grouplayer": "me,NRRadioInfrastructure,NRPhysicalCellDU"}, "optionalfilter": {"type": 0, "filteritems": [{"id": "100110109", "position": 0, "operation": 1, "value": -112}]}, "maxrowsize": 1000000, "keywords": [""], "showintergrity": false, "showbusinesscolumn": true, "businesscolumns": ["cellId","duMeMoId", "gNBId", "gNBIdLength", "gNBplmn", "masterOperatorId", "nrCarrierGroupId", "nrPhysicalCellDUId"]}}, "relyonarithmeticnames": ""}, "taskparameters": {}, "topicname": "RANUME_NIA_NII_ANALYSIS", "timeout": 300, "taskexedatetime": "2021-10-24 24:00:00", "outputpath": "", "casetype": "default", "scene_type": "nii"}'
+	curl -X GET http://op-proxy:8089/opapi/csmworker/v1/tenants/ranoss/csresources?resource_name=nia_ngi_gr_db
+	curl -X POST http://nia-qualcommon-service-v1:12500/api/nia-qualcommon-service/v1/kpiQuality/_query -H 'Content-Type:application/json' -H 'language-option:zh-CN' -d '{"requestid":"37c1732c-b6a7-4899-8aa3-753970b8dac2","starttime":"2022-09-06"}'
+
+
+google dev tools
+	Network Filter: 
+		regex: //, -//, -/.*.js|.*.css/, -/username|status|refreshsession|waterprint/, api/nia
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
