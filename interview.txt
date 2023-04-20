@@ -1,0 +1,40 @@
+interview:
+
+Java内存模型，多线程与锁
+锁升级，AQS，JVM
+Spring ioc, aop, 自动装配原理
+事务，回滚，不支持回滚的部分自己来做回滚
+MySQL 索引，锁，事务
+Redis
+原来使用redis做调度消息队列，后来改了postgres，问题及对比，数据量小，postgres可靠性更高
+leftPop，延迟阻塞
+redisson分布式锁原理
+zookeeper与redis分布式锁redlock区别
+分布式系统会遇到的三座大山： NPC 。
+N： Network Delay ， 网络延迟
+P： Process Pause ， 进程暂停（GC）
+C： Clock Drift ， 时钟漂移
+一 个分布式锁 ， 在极端情况下 ， 不 一 定是安全的 。
+如果你的业务数据非常敏感 ， 在使用分布式锁时 ， 一 定要注意这个问题 ， 不能假设分布式锁 100% 安全 。
+Redlock 尽量不用它 ， 而且它的性能不如单机版 Redis ， 部署成本也高 ， 优先考虑使用主从+ 哨兵的模式 实现分布式锁 。
+redis的单线程
+mybatis
+kafka
+http，tcp
+websocket
+效率和性能提升场景
+docker和k8s
+sdapi调度原理/方案
+是否会存在重复调度，调度之后无响应
+gis地图原理，离线和在线
+activiti工作流
+数据中台对接原理，难点，优化
+队列控制/任务调度策略，action机制
+穿刺/解决的疑难问题
+设计模式
+设计模式的原则有开闭原则、里氏替换原则、依赖倒置原则、单一职责原则、接口隔离原则、迪米特法原则、合成复用原则
+https://blog.csdn.net/zhaohongfei_358/article/details/115085887?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_utm_term~default-0-115085887-blog-119924760.pc_relevant_multi_platform_whitelistv3&spm=1001.2101.3001.4242.1&utm_relevant_index=3
+创建型模式: 
+	单例模式, 原型模式, 工厂模式(简单工厂模式, 工厂方法模式, 抽象工厂模式), 建造者模式, 
+	代理模式(静态/动态(如Spring AOP)), 装饰器模式(BufferReader为FileReader增加了Buffer功能), 适配器模式, 桥接模式, 外观模式, 享元模式(共享的单元, 复用对象(不可变对象), 大量重复的对象, 且是不可变对象, 将其设计成享元, 如Integer中的cache), 组合模式(对象里面套对象, 对象组合成大的新对象), 观察者模式(Observer, 状态改变需通知), 中介者模式, 模板方法模式, 策略模式(策略的选择角色/环境类/Context, 通过设置环境对象来选择策略), 命令模式, 责任链模式, 状态模式, 迭代器模式, 访问者模式, 备忘录模式/快照模式, 解释器模式
+微服务架构
