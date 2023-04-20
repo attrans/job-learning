@@ -1,0 +1,57 @@
+python instructions
+
+import pandas as pd
+pd.set_option('display.max_rows', 5000) # 打印最大行数
+pd.set_option('display.max_columns', 100) # 打印最大列数
+
+df = pd.DataFrame({'key1':list('aabba'),
+                  'key2': ['one','two','one','two','one'],
+                  'data1': np.random.randn(5),
+                  'data2': np.random.randn(5)})
+df
+grouped=df.groupby(['key1'])
+result = dict()
+for key ,group in grouped:
+    print(key)
+    print(group)
+	result[key] = group
+	print(result)
+	
+match = re.match('^busy_hour[(]\s*(\d+)\s*\-\s*(\d+)\s*[)]$', rule)
+        if match:
+            log.info('rule is satified "busy_hour".rule:{}.'.format(rule))
+            groups = match.groups()
+            start = groups[0]
+            end = groups[1]
+			
+re.match('^\s+([><])[=]*(\d+[\.]*\d*)', rule)
+
+pd.merge
+df.sortvalues
+df.reset_index
+df.groupby.apply
+//groupby[(a-zA-Z_)]+\.apply
+
+
+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(1668787200000 / 1000))
+
+datetime.datetime.strptime('2022-12-20 00:00:00', "%Y-%m-%d %H:%M:%S").timestamp()*1000
+datetime.datetime.fromtimestamp(1671494400000/1000)
+
+df = pd.DataFrame({'key1':['a', 'b', 'c'],
+                  'key2': ['one', 'two', 'one'],
+                  'data1': [1, 2, 3],
+                  'data2': [4, 5, 6]})
+				  
+data1 = df.loc[0:2, ['data1']]
+data1.agg({'data1': ['mean']}).eval('data1>1')
+
+df1 = pd.concat([df1, df2])
+
+begin_time = (datetime.datetime.strptime(change_point_time, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
+
+for array in arrays:
+    print colour
+	
+for i in range(0, len(arrays)):
+    print i, arrays[i]
