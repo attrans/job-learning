@@ -1,0 +1,150 @@
+select * from nia_qualcommon_taskbaseinfo limit 1;
+
+where xxx is null
+
+update nia_qualcommon_taskbaseinfo set task_type = 1, task_location = '{"groups":["*"]}' where taskid_ui = 'xxx';
+
+update nia_nii_interference_optimize_nrphysical set issue_status = null;
+
+alter table if exists nia_qualcommon_taskbaseinfo drop column if exists task_type;
+
+alter table if exists nia_qualcommon_taskbaseinfo alter column task_type set data type varchar(100);
+
+alter table nqi_nds_task_info alter column task_nds_idlist set data type varchar(5000);
+
+alter table nia_nii_interference_optimize_nrphysical alter column nodeb_name drop not null;
+
+alter table nia_nii_interference_optimize_nrphysical alter column issue_status set default 'not_issued';
+
+ALTER TABLE IF EXISTS T_PMTUTaskData ALTER COLUMN ne_name TYPE VARCHAR(200);
+
+delete from nia_qualcommon_taskbaseinfo where taskid_ui = 'dmp-data-extract-id';
+
+select * from nia_npa_workflow_task where splittaskid like '20220425161957-797e5408-4edb-4d97-b26a-263357db87d3-%';
+
+select distinct me_uuid, nrradioinfrastructureid, nrphysicalcellduid from nii_configdata;
+select count(*) from (select distinct me_uuid, nrradioinfrastructureid, nrphysicalcellduid from nii_configdata) a;
+select distinct gnbplmn, gnbid, cellid from nii_configdata;
+
+SELECT cluster_id, nodeb_id, cell_id, cell_name, carrier_id, cch_cur_value, cch_suggest_value, tch_cur_value, tch_suggest_value, issue_status, issue_detail FROM nia_nii_interference_optimize_nrphysical WHERE task_id = '1a48906a-239a-48c2-adf7-7135a5aef1e8' ORDER BY cluster_id ASC, nodeb_id ASC, cell_id ASC OFFSET 20 LIMIT 20;
+
+postgres 部分列distinct: select distinct on (a,b) a,b,c,d from table_a order by a, b;
+替换写法(支持mysql, spark, gp, pg, flink): select a, b, c, d from (select *, row_number() over (partition by a, b order by a, b desc) as rn from table_a) as t where t.rn=1 order by a, b;
+
+postgres模糊匹配数字类型的字段(使用cast强转): select * from table_a where cast(column_int as text) like '%123%';
+也可以使用强转符: select * from table_a where column_int::text like '%123%';
+
+String.format中的sql的like条件, 要使用两个%包住%s, 例如: sqlBuilder.append(String.format(" AND ( " + "cellid::TEXT LIKE '%%%s%%' OR " + "cellname LIKE '%%%s%%'" + ")", cellId, cellName));
+
+AP进程化后登录方法：
+ 1.登录TCF控制节点，查看AP数据库vip
+* pdm-cli vip list|grep ap_external_vip
+2.使用查询出来的VIP SSH登录到数据库的master节点，然后切换到gpadmin用户。
+* ssh ubuntu@vip（修改为实际的IP）登录到master节点
+* sudo -i切换到master节点的root用户
+* su - gpadmin切换到gpadmin用户下
+psql -d netmaxdb
+
+设置缺省查询数据库：
+set search_path to zxdmo;
+
+// 设置缺省查询数据库/视图可不写zxdmo.
+select managedelementtype, subnetwork, managedelement, ldn, p_date, count(*) from zxdmo.ods_nr_ume_cmall_gnbdufunction group by managedelementtype, subnetwork, managedelement, ldn, p_date;
+select managedelementtype, subnetwork, managedelement, ldn, p_date, count(*) from zxdmo.ods_nr_ume_cmall_gnbdufunction where p_date = '2022-10-11' group by managedelementtype, subnetwork, managedelement, ldn, p_date;
+
+gpconfig --help
+gpconfig -l|grep max_stack
+
+select netype, string_agg(motype, '; ') as motypes from (select * from nia_qualcommon_taskbaseinfo where scene_type = 'nii') as temp group by netype;
+
+select relname, pg_size_pretty(pg_relation_size(relid)) from pg_stat_user_tables where schemaname='public' order by pg_relation_size(relid) desc;
+
+数据库的空值(null)跟数字相加结果也为空值, numpy也是如此处理, 数字跟非数字相加就是非数字, 但是不会报错
+聚合函数max()针对一个列所有值来处理, 取出最大值, 如果想在查询结果的每一行中的多列中取最大值
+1. 使用sort_array(array[col1,col2,col3],false)[0], 需要确认是否支持
+2. 使用values子句，将每行数据构造为只有一个字段的表，以后求最大值: select Guid,(select Max(NewDate) from (values (Date1),(Date2),(Date3)) as #temp(NewDate)) as MaxDate from Demo
+3. 使用行转列经常用的UNPIVOT关键字进行转换再显示: select Guid, max(NewDate) as MaxDate from Demo unpivot (NewDate for DateVal in (Date1,Date2,Date3)) as u group by Guid
+4. 跟第2种方法差不多，但是使用union将三个UpdateByAppDate字段合并为只有一个字段的结果集然后求最大值(效率低, 不建议使用):select Guid, (select max(NewDate) as MaxDate from (select Demo.Date1 as NewDate union select Demo.Date2 union select Demo.Date3)ud) MaxDate from Demo
+5. postgres的Conditional Expressions(条件表达式)中有GREATEST, LEAST, COALESCE等: GREATEST(value [, ...])
+
+postgres查看表结构和索引/约束: \d 表名
+查看索引:
+	select * from pg_indexes where tablename='tbname';
+	select * from pg_statio_all_indexes where relname='tbname';
+创建索引:
+	create index if not exists tbl_bb_index on tbl_bb(id,name); // tbl_bb为表名称, tbl_bb_index为创建的索引名称, id和 name为表里的字段
+删除索引:
+	DROP INDEX index_name; // index_name是要删除的索引名
+	
+sql脚本使用##分隔行? 还是使用;分隔语句?
+org.apache.ibatis.jdbc.ScriptRunner, 默认分隔符/delimiter是";", 可以设置, 比如"##"
+
+select count(*) from (SELECT '440000' AS p_provincecode, '2022-08-20' AS p_date, p.subnetwork, p.managedelement, p.userlabel AS me_name, p.moid AS me_id, ('' || p.subnetwork || '_' || p.managedelement) AS me_uuid, f.refnrphysicalcelldu, f.cell_name, f.nrradioinfrastructureid, f.nrphysicalcellduid, f.nrbandwidth, f.cell_id AS cellid, f.gnbid AS gnbid, f.gplmnid AS gnbplmn, f.frequency FROM zxdmo.ods_plat_ume_cmall_managedelement AS p INNER JOIN (SELECT g.managedelementtype, g.subnetwork, g.managedelement, g.gnbid, g.gplmnid, g.gnodeb_id_res, g.gnodeb_name, g.refnrphysicalcelldu, d.nrradioinfrastructureid, d.nrphysicalcellduid, g.cell_id, g.cell_name, d.nrbandwidth, d.frequency FROM (SELECT k.managedelementtype, k.subnetwork, k.managedelement, k.ldn, CAST( (REGEXP_SPLIT_TO_ARRAY(k.ldn, '[,=]'))[1 + 1] AS INTEGER) AS nrradioinfrastructureid, k.nrphysicalcellduid, e.nrbandwidth, e.frequency, e.p_date FROM zxdmo.ods_nr_ume_cmall_nrphysicalcelldu AS k INNER JOIN zxdmo.ods_nr_ume_cmall_carrierdl AS e ON k.subnetwork = e.subnetwork AND k.managedelement = e.managedelement AND e.ldn = ('' || k.refnrcarrier || ',CarrierDL=1') AND e.managedelementtype = k.managedelementtype AND e.managedelementtype = 'ITBBU' AND e.nrbandwidth IS NOT NULL AND e.frequency IS NOT NULL AND e.p_date = k.p_date AND e.p_date = '2022-08-20') AS d INNER JOIN (SELECT gnbdufunction.managedelementtype, gnbdufunction.subnetwork, gnbdufunction.managedelement, gnbdufunction.gnbid AS gnbid, gnbdufunction.plmnid AS gplmnid, gnbdufunction.moid AS gnodeb_id_res, gnbdufunction.userlabel AS gnodeb_name, du.refnrphysicalcelldu, du.celllocalid AS cell_id, du.userlabel AS cell_name, du.p_date FROM zxdmo.ods_nr_ume_cmall_gnbdufunction AS gnbdufunction INNER JOIN zxdmo.ods_nr_ume_cmall_nrcelldu AS du ON gnbdufunction.managedelementtype = du.managedelementtype AND gnbdufunction.subnetwork = du.subnetwork AND gnbdufunction.managedelement = du.managedelement AND gnbdufunction.ldn =  (REGEXP_SPLIT_TO_ARRAY(du.ldn, ','))[0 + 1] AND gnbdufunction.p_date = du.p_date AND gnbdufunction.p_date = '2022-08-20' AND gnbdufunction.managedelementtype = 'ITBBU') AS g ON d.managedelementtype = g.managedelementtype AND d.subnetwork = g.subnetwork AND d.managedelement = g.managedelement AND d.ldn = g.refnrphysicalcelldu AND d.p_date = '2022-08-20') AS f ON p.managedelementtype = f.managedelementtype AND p.subnetwork = f.subnetwork AND p.managedelement = f.managedelement) aaa;
+
+select count(*) from (SELECT distinct on (p.subnetwork, p.managedelement, f.nrradioinfrastructureid, f.nrphysicalcellduid) '440000' AS p_provincecode, '2023-02-19' AS p_date, p.subnetwork, p.managedelement, p.userlabel AS me_name, p.moid AS me_id, ('' || p.subnetwork || '_' || p.managedelement) AS me_uuid, f.refnrphysicalcelldu, f.cell_name, f.nrradioinfrastructureid, f.nrphysicalcellduid, f.nrbandwidth, f.cell_id AS cellid, f.gnbid AS gnbid, f.gplmnid AS gnbplmn, f.frequency FROM zxdmo.ods_plat_ume_cmall_managedelement AS p INNER JOIN (SELECT g.managedelementtype, g.subnetwork, g.managedelement, g.gnbid, g.gplmnid, g.gnodeb_id_res, g.gnodeb_name, g.refnrphysicalcelldu, d.nrradioinfrastructureid, d.nrphysicalcellduid, g.cell_id, g.cell_name, d.nrbandwidth, d.frequency FROM (SELECT k.managedelementtype, k.subnetwork, k.managedelement, k.ldn, CAST( (REGEXP_SPLIT_TO_ARRAY(k.ldn, '[,=]'))[1 + 1] AS INTEGER) AS nrradioinfrastructureid, k.nrphysicalcellduid, e.nrbandwidth, e.frequency, e.p_date FROM zxdmo.ods_nr_ume_cmall_nrphysicalcelldu AS k INNER JOIN zxdmo.ods_nr_ume_cmall_carrierdl AS e ON k.subnetwork = e.subnetwork AND k.managedelement = e.managedelement AND e.ldn = ('' || k.refnrcarrier || ',CarrierDL=1') AND e.managedelementtype = k.managedelementtype AND e.managedelementtype = 'ITBBU' AND e.nrbandwidth IS NOT NULL AND e.frequency IS NOT NULL AND e.p_date = k.p_date AND e.p_date = '2023-02-19') AS d INNER JOIN (SELECT gnbdufunction.managedelementtype, gnbdufunction.subnetwork, gnbdufunction.managedelement, gnbdufunction.gnbid AS gnbid, gnbdufunction.plmnid AS gplmnid, gnbdufunction.moid AS gnodeb_id_res, gnbdufunction.userlabel AS gnodeb_name, du.refnrphysicalcelldu, du.celllocalid AS cell_id, du.userlabel AS cell_name, du.p_date FROM zxdmo.ods_nr_ume_cmall_gnbdufunction AS gnbdufunction INNER JOIN zxdmo.ods_nr_ume_cmall_nrcelldu AS du ON gnbdufunction.managedelementtype = du.managedelementtype AND gnbdufunction.subnetwork = du.subnetwork AND gnbdufunction.managedelement = du.managedelement AND gnbdufunction.ldn =  (REGEXP_SPLIT_TO_ARRAY(du.ldn, ','))[0 + 1] AND gnbdufunction.p_date = du.p_date AND gnbdufunction.p_date = '2023-02-19' AND gnbdufunction.managedelementtype = 'ITBBU') AS g ON d.managedelementtype = g.managedelementtype AND d.subnetwork = g.subnetwork AND d.managedelement = g.managedelement AND d.ldn = g.refnrphysicalcelldu AND d.p_date = '2023-02-19') AS f ON p.managedelementtype = f.managedelementtype AND p.subnetwork = f.subnetwork AND p.managedelement = f.managedelement) aaa;
+
+SELECT b.subnetworkid, b.managedelementid, b.ne, b.nrradioinfrastructureid, b.nrphysicalcellduid, b.ducellid, b.cellid, b.gnbid, b.gnbidlength, b.gnbplmn, b.starttime, C616650016_0, C616650016_1, C616650016_2, C616650016_3, C616650016_4, C616650016_5, C616650016_6, C616650016_7, C616650016_8, C616650016_9, C616650016_10, C616650016_11, C616650016_12, C616650016_13, C616650016_14, C616650016_15, C616650016_16, C616650016_17, C616650016_18, C616650016_19, C616650016_20, C616650016_21, C616650016_22, C616650016_23, C616650016_24, C616650016_25, C616650016_26, C616650016_27, C616650016_28, C616650016_29, C616650016_30, C616650016_31, C616650016_32, C616650016_33, C616650016_34, C616650016_35, C616650016_36, C616650016_37, C616650016_38, C616650016_39, C616650016_40, C616650016_41, C616650016_42, C616650016_43, C616650016_44, C616650016_45, C616650016_46, C616650016_47, C616650016_48, C616650016_49, C616650016_50, C616650016_51, C616650016_52, C616650016_53, C616650016_54, C616650016_55, C616650016_56, C616650016_57, C616650016_58, C616650016_59, C616650016_60, C616650016_61, C616650016_62, C616650016_63, C616650016_64, C616650016_65, C616650016_66, C616650016_67, C616650016_68, C616650016_69, C616650016_70, C616650016_71, C616650016_72, C616650016_73, C616650016_74, C616650016_75, C616650016_76, C616650016_77, C616650016_78, C616650016_79, C616650016_80, C616650016_81, C616650016_82, C616650016_83, C616650016_84, C616650016_85, C616650016_86, C616650016_87, C616650016_88, C616650016_89, C616650016_90, C616650016_91, C616650016_92, C616650016_93, C616650016_94, C616650016_95, C616650016_96, C616650016_97, C616650016_98, C616650016_99, C616650016_100, C616650016_101, C616650016_102, C616650016_103, C616650016_104, C616650016_105, C616650016_106, C616650016_107, C616650016_108, C616650016_109, C616650016_110, C616650016_111, C616650016_112, C616650016_113, C616650016_114, C616650016_115, C616650016_116, C616650016_117, C616650016_118, C616650016_119, C616650016_120, C616650016_121, C616650016_122, C616650016_123, C616650016_124, C616650016_125, C616650016_126, C616650016_127, C616650016_128, C616650016_129, C616650016_130, C616650016_131, C616650016_132, C616650016_133, C616650016_134, C616650016_135, C616650016_136, C616650016_137, C616650016_138, C616650016_139, C616650016_140, C616650016_141, C616650016_142, C616650016_143, C616650016_144, C616650016_145, C616650016_146, C616650016_147, C616650016_148, C616650016_149, C616650016_150, C616650016_151, C616650016_152, C616650016_153, C616650016_154, C616650016_155, C616650016_156, C616650016_157, C616650016_158, C616650016_159, C616650016_160, C616650016_161, C616650016_162, C616650016_163, C616650016_164, C616650016_165, C616650016_166, C616650016_167, C616650016_168, C616650016_169, C616650016_170, C616650016_171, C616650016_172, C616650016_173, C616650016_174, C616650016_175, C616650016_176, C616650016_177, C616650016_178, C616650016_179, C616650016_180, C616650016_181, C616650016_182, C616650016_183, C616650016_184, C616650016_185, C616650016_186, C616650016_187, C616650016_188, C616650016_189, C616650016_190, C616650016_191, C616650016_192, C616650016_193, C616650016_194, C616650016_195, C616650016_196, C616650016_197, C616650016_198, C616650016_199, C616650016_200, C616650016_201, C616650016_202, C616650016_203, C616650016_204, C616650016_205, C616650016_206, C616650016_207, C616650016_208, C616650016_209, C616650016_210, C616650016_211, C616650016_212, C616650016_213, C616650016_214, C616650016_215, C616650016_216, C616650016_217, C616650016_218, C616650016_219, C616650016_220, C616650016_221, C616650016_222, C616650016_223, C616650016_224, C616650016_225, C616650016_226, C616650016_227, C616650016_228, C616650016_229, C616650016_230, C616650016_231, C616650016_232, C616650016_233, C616650016_234, C616650016_235, C616650016_236, C616650016_237, C616650016_238, C616650016_239, C616650016_240, C616650016_241, C616650016_242, C616650016_243, C616650016_244, C616650016_245, C616650016_246, C616650016_247, C616650016_248, C616650016_249, C616650016_250, C616650016_251, C616650016_252, C616650016_253, C616650016_254, C616650016_255, C616650016_256, C616650016_257, C616650016_258, C616650016_259, C616650016_260, C616650016_261, C616650016_262, C616650016_263, C616650016_264, C616650016_265, C616650016_266, C616650016_267, C616650016_268, C616650016_269, C616650016_270, C616650016_271, C616650016_272 FROM ( SELECT nrphysicalcellduid, subnetworkid, managedelementid, ne, nrradioinfrastructureid, ducellid, cellid, gnbid, gnbidlength, gnbplmn, starttime, avguldbmprb FROM ( SELECT nrphysicalcellduid, subnetworkid, managedelementid, ne, nrradioinfrastructureid, ducellid, cellid, gnbid, gnbidlength, gnbplmn, starttime, (C616650016_0 + C616650016_1 + C616650016_2 + C616650016_3 + C616650016_4 + C616650016_5 + C616650016_6 + C616650016_7 + C616650016_8 + C616650016_9 + C616650016_10 + C616650016_11 + C616650016_12 + C616650016_13 + C616650016_14 + C616650016_15 + C616650016_16 + C616650016_17 + C616650016_18 + C616650016_19 + C616650016_20 + C616650016_21 + C616650016_22 + C616650016_23 + C616650016_24 + C616650016_25 + C616650016_26 + C616650016_27 + C616650016_28 + C616650016_29 + C616650016_30 + C616650016_31 + C616650016_32 + C616650016_33 + C616650016_34 + C616650016_35 + C616650016_36 + C616650016_37 + C616650016_38 + C616650016_39 + C616650016_40 + C616650016_41 + C616650016_42 + C616650016_43 + C616650016_44 + C616650016_45 + C616650016_46 + C616650016_47 + C616650016_48 + C616650016_49 + C616650016_50 + C616650016_51 + C616650016_52 + C616650016_53 + C616650016_54 + C616650016_55 + C616650016_56 + C616650016_57 + C616650016_58 + C616650016_59 + C616650016_60 + C616650016_61 + C616650016_62 + C616650016_63 + C616650016_64 + C616650016_65 + C616650016_66 + C616650016_67 + C616650016_68 + C616650016_69 + C616650016_70 + C616650016_71 + C616650016_72 + C616650016_73 + C616650016_74 + C616650016_75 + C616650016_76 + C616650016_77 + C616650016_78 + C616650016_79 + C616650016_80 + C616650016_81 + C616650016_82 + C616650016_83 + C616650016_84 + C616650016_85 + C616650016_86 + C616650016_87 + C616650016_88 + C616650016_89 + C616650016_90 + C616650016_91 + C616650016_92 + C616650016_93 + C616650016_94 + C616650016_95 + C616650016_96 + C616650016_97 + C616650016_98 + C616650016_99 + C616650016_100 + C616650016_101 + C616650016_102 + C616650016_103 + C616650016_104 + C616650016_105 + C616650016_106 + C616650016_107 + C616650016_108 + C616650016_109 + C616650016_110 + C616650016_111 + C616650016_112 + C616650016_113 + C616650016_114 + C616650016_115 + C616650016_116 + C616650016_117 + C616650016_118 + C616650016_119 + C616650016_120 + C616650016_121 + C616650016_122 + C616650016_123 + C616650016_124 + C616650016_125 + C616650016_126 + C616650016_127 + C616650016_128 + C616650016_129 + C616650016_130 + C616650016_131 + C616650016_132 + C616650016_133 + C616650016_134 + C616650016_135 + C616650016_136 + C616650016_137 + C616650016_138 + C616650016_139 + C616650016_140 + C616650016_141 + C616650016_142 + C616650016_143 + C616650016_144 + C616650016_145 + C616650016_146 + C616650016_147 + C616650016_148 + C616650016_149 + C616650016_150 + C616650016_151 + C616650016_152 + C616650016_153 + C616650016_154 + C616650016_155 + C616650016_156 + C616650016_157 + C616650016_158 + C616650016_159 + C616650016_160 + C616650016_161 + C616650016_162 + C616650016_163 + C616650016_164 + C616650016_165 + C616650016_166 + C616650016_167 + C616650016_168 + C616650016_169 + C616650016_170 + C616650016_171 + C616650016_172 + C616650016_173 + C616650016_174 + C616650016_175 + C616650016_176 + C616650016_177 + C616650016_178 + C616650016_179 + C616650016_180 + C616650016_181 + C616650016_182 + C616650016_183 + C616650016_184 + C616650016_185 + C616650016_186 + C616650016_187 + C616650016_188 + C616650016_189 + C616650016_190 + C616650016_191 + C616650016_192 + C616650016_193 + C616650016_194 + C616650016_195 + C616650016_196 + C616650016_197 + C616650016_198 + C616650016_199 + C616650016_200 + C616650016_201 + C616650016_202 + C616650016_203 + C616650016_204 + C616650016_205 + C616650016_206 + C616650016_207 + C616650016_208 + C616650016_209 + C616650016_210 + C616650016_211 + C616650016_212 + C616650016_213 + C616650016_214 + C616650016_215 + C616650016_216 + C616650016_217 + C616650016_218 + C616650016_219 + C616650016_220 + C616650016_221 + C616650016_222 + C616650016_223 + C616650016_224 + C616650016_225 + C616650016_226 + C616650016_227 + C616650016_228 + C616650016_229 + C616650016_230 + C616650016_231 + C616650016_232 + C616650016_233 + C616650016_234 + C616650016_235 + C616650016_236 + C616650016_237 + C616650016_238 + C616650016_239 + C616650016_240 + C616650016_241 + C616650016_242 + C616650016_243 + C616650016_244 + C616650016_245 + C616650016_246 + C616650016_247 + C616650016_248 + C616650016_249 + C616650016_250 + C616650016_251 + C616650016_252 + C616650016_253 + C616650016_254 + C616650016_255 + C616650016_256 + C616650016_257 + C616650016_258 + C616650016_259 + C616650016_260 + C616650016_261 + C616650016_262 + C616650016_263 + C616650016_264 + C616650016_265 + C616650016_266 + C616650016_267 + C616650016_268 + C616650016_269 + C616650016_270 + C616650016_271 + C616650016_272) / 273 AS avguldbmprb, p_date, p_provincecode FROM zxdmo.fact_nr_pm_uldbm_d WHERE p_date = '2022-05-09' AND p_provincecode = '440000' ) t WHERE t.p_date = '2022-05-09' AND t.avguldbmprb >= -112 ORDER BY t.avguldbmprb LIMIT 8000 ) a JOIN zxdmo.fact_nr_pm_uldbm_h b ON a.subnetworkid = b.subnetworkid AND a.managedelementid = b.managedelementid AND a.nrradioinfrastructureid = b.nrradioinfrastructureid AND a.nrphysicalcellduid = b.nrphysicalcellduid WHERE b.p_date = '2022-05-09' AND b.p_provincecode = '440000';
+
+
+1. COPY churches FROM '$PWD/data/Data - Churches.csv' WITH DELIMITER ',' CSV HEADER;
+
+默认情况下， COPY 命令按照表中列的默认顺序从CSV文件复制列。 HEADER 选项在输入被忽略，它基本上仅通知后端忽略输入的第一行。如果CSV中的列顺序与表中的列顺序不匹配，则可以显式指定列顺序以匹配CSV文件的布局：
+
+2. COPY churches (id,denomination_id,name,address_id) FROM '$PWD/data/Data - Churches.csv' WITH DELIMITER ',' CSV HEADER;
+
+psql -d nia_ngi_gr_db
+psql -d netmaxdb
+psql -h x.x.x.x -d xxx -U xxx -p xxx
+\dt zxdmo.表名*		zxdmo为schema
+select count(*) from zxdmo.fact_nr_pm_uldbm_h;
+select count(*) from zxdmo.nii_src_pmdata;
+select distinct p_date from zxdmo.fact_nr_pm_uldbm_h;
+select p_provincecode, p_date, count(1) from zxdmo.nii_src_pmdata group by p_provincecode, p_date;
+
+update nii_pmdata set c616650016_0=-90.6398 ,c616650016_1=-85.6796 ,c616650016_2=-104.4701 ,c616650016_3=-102.0211 ,c616650016_4=-94.1593 ,c616650016_5=-83.4275 ,c616650016_6=-105.3216 ,c616650016_7=-83.1863 ,c616650016_8=-102.3849 ,c616650016_9=-84.695 ,c616650016_10=-100.8679 ,c616650016_11=-86.489 ,c616650016_12=-87.194 ,c616650016_13=-96.5577 ,c616650016_14=-89.5155 ,c616650016_15=-98.103 ,c616650016_16=-93.0819 ,c616650016_17=-88.4376 ,c616650016_18=-104.2337 ,c616650016_19=-106.5358 ,c616650016_20=-86.3546 ,c616650016_21=-86.0202 ,c616650016_22=-106.8206 ,c616650016_23=-90.9802 ,c616650016_24=-81.2702 ,c616650016_25=-96.6004 ,c616650016_26=-86.1221 ,c616650016_27=-81.5817 ,c616650016_28=-81.2574 ,c616650016_29=-89.6978 ,c616650016_30=-87.4333 ,c616650016_31=-90.7146 ,c616650016_32=-95.2548 ,c616650016_33=-99.9882 ,c616650016_34=-86.5245 ,c616650016_35=-103.597 ,c616650016_36=-90.5137 ,c616650016_37=-103.9306 ,c616650016_38=-105.2364 ,c616650016_39=-94.5711 ,c616650016_40=-85.3568 ,c616650016_41=-98.1695 ,c616650016_42=-82.9039 ,c616650016_43=-85.4237 ,c616650016_44=-95.548 ,c616650016_45=-98.1606 ,c616650016_46=-95.397 ,c616650016_47=-90.7682 ,c616650016_48=-105.3665 ,c616650016_49=-80.5847 ,c616650016_50=-82.778 ,c616650016_51=-81.6329 ,c616650016_52=-90.4796 ,c616650016_53=-97.0526 ,c616650016_54=-88.9824 ,c616650016_55=-106.1962 ,c616650016_56=-96.2238 ,c616650016_57=-95.171 ,c616650016_58=-105.7077 ,c616650016_59=-103.7419 ,c616650016_60=-105.2251 ,c616650016_61=-87.6941 ,c616650016_62=-97.4196 ,c616650016_63=-90.5028 ,c616650016_64=-93.4465 ,c616650016_65=-91.1992 ,c616650016_66=-98.7142 ,c616650016_67=-90.7652 ,c616650016_68=-105.7236 ,c616650016_69=-103.6733 ,c616650016_70=-82.371 ,c616650016_71=-99.0175 ,c616650016_72=-102.9293 ,c616650016_73=-98.2266 ,c616650016_74=-83.1235 ,c616650016_75=-86.759 ,c616650016_76=-89.6287 ,c616650016_77=-93.0939 ,c616650016_78=-92.0449 ,c616650016_79=-82.5254 ,c616650016_80=-84.482 ,c616650016_81=-81.9743 ,c616650016_82=-91.6153 ,c616650016_83=-97.8693 ,c616650016_84=-90.464 ,c616650016_85=-96.2403 ,c616650016_86=-88.9041 ,c616650016_87=-84.5226 ,c616650016_88=-88.3165 ,c616650016_89=-94.042 ,c616650016_90=-95.7622 ,c616650016_91=-98.6217 ,c616650016_92=-81.8331 ,c616650016_93=-106.235 ,c616650016_94=-81.5379 ,c616650016_95=-92.2475 ,c616650016_96=-104.4217 ,c616650016_97=-95.7028 ,c616650016_98=-84.0816 ,c616650016_99=-105.3171 ,c616650016_100=-92.3331 ,c616650016_101=-82.5854 ,c616650016_102=-95.5335 ,c616650016_103=-92.4529 ,c616650016_104=-94.9865 ,c616650016_105=-82.3447 ,c616650016_106=-99.4833 ,c616650016_107=-92.9897 ,c616650016_108=-81.3792 ,c616650016_109=-85.8891 ,c616650016_110=-96.2278 ,c616650016_111=-84.2928 ,c616650016_112=-101.5448 ,c616650016_113=-92.5987 ,c616650016_114=-95.7143 ,c616650016_115=-101.1208 ,c616650016_116=-88.9745 ,c616650016_117=-102.3019 ,c616650016_118=-81.4005 ,c616650016_119=-100.6215 ,c616650016_120=-96.229 ,c616650016_121=-101.177 ,c616650016_122=-104.5832 ,c616650016_123=-82.1896 ,c616650016_124=-86.0308 ,c616650016_125=-85.4741 ,c616650016_126=-98.1653 ,c616650016_127=-99.6201 ,c616650016_128=-88.0959 ,c616650016_129=-99.3677 ,c616650016_130=-94.6158 ,c616650016_131=-93.2017 ,c616650016_132=-104.9144 ,c616650016_133=-82.9418 ,c616650016_134=-102.7385 ,c616650016_135=-94.0438 ,c616650016_136=-87.1104 ,c616650016_137=-84.6075 ,c616650016_138=-102.1113 ,c616650016_139=-100.5567 ,c616650016_140=-93.1064 ,c616650016_141=-102.7972 ,c616650016_142=-84.1611 ,c616650016_143=-82.261 ,c616650016_144=-83.1108 ,c616650016_145=-93.3875 ,c616650016_146=-102.6833 ,c616650016_147=-100.6373 ,c616650016_148=-101.7882 ,c616650016_149=-94.5504 ,c616650016_150=-99.1212 ,c616650016_151=-103.0993 ,c616650016_152=-93.7392 ,c616650016_153=-95.3023 ,c616650016_154=-92.3274 ,c616650016_155=-94.2449 ,c616650016_156=-84.1129 ,c616650016_157=-87.7935 ,c616650016_158=-83.923 ,c616650016_159=-97.0475 ,c616650016_160=-88.602 ,c616650016_161=-84.5465 ,c616650016_162=-89.8745 ,c616650016_163=-96.0693 ,c616650016_164=-81.4407 ,c616650016_165=-81.658 ,c616650016_166=-91.3838 ,c616650016_167=-101.383 ,c616650016_168=-102.3319 ,c616650016_169=-105.1357 ,c616650016_170=-105.7376 ,c616650016_171=-84.4838 ,c616650016_172=-91.5061 ,c616650016_173=-80.8011 ,c616650016_174=-84.9468 ,c616650016_175=-90.0407 ,c616650016_176=-105.3126 ,c616650016_177=-102.9141 ,c616650016_178=-85.5156 ,c616650016_179=-107.0454 ,c616650016_180=-85.7093 ,c616650016_181=-86.0061 ,c616650016_182=-96.4857 ,c616650016_183=-89.3859 ,c616650016_184=-94.9034 ,c616650016_185=-102.7087 ,c616650016_186=-81.7447 ,c616650016_187=-90.3833 ,c616650016_188=-86.7625 ,c616650016_189=-86.8881 ,c616650016_190=-83.2816 ,c616650016_191=-95.4245 ,c616650016_192=-88.5508 ,c616650016_193=-93.38 ,c616650016_194=-94.9221 ,c616650016_195=-96.047 ,c616650016_196=-83.2715 ,c616650016_197=-94.2383 ,c616650016_198=-107.0648 ,c616650016_199=-101.2298 ,c616650016_200=-96.834 ,c616650016_201=-106.8906 ,c616650016_202=-91.2669 ,c616650016_203=-84.4209 ,c616650016_204=-89.5528 ,c616650016_205=-101.2242 ,c616650016_206=-99.4607 ,c616650016_207=-94.0146 ,c616650016_208=-99.9354 ,c616650016_209=-93.9313 ,c616650016_210=-96.8947 ,c616650016_211=-94.3384 ,c616650016_212=-81.8293 ,c616650016_213=-93.8487 ,c616650016_214=-100.448 ,c616650016_215=-96.8195 ,c616650016_216=-84.2365 ,c616650016_217=-83.6254 ,c616650016_218=-91.2635 ,c616650016_219=-99.3022 ,c616650016_220=-80.6913 ,c616650016_221=-104.6707 ,c616650016_222=-85.4536 ,c616650016_223=-95.3581 ,c616650016_224=-100.5533 ,c616650016_225=-85.6885 ,c616650016_226=-82.0581 ,c616650016_227=-93.1928 ,c616650016_228=-102.7149 ,c616650016_229=-86.6866 ,c616650016_230=-99.8871 ,c616650016_231=-106.0363 ,c616650016_232=-98.8323 ,c616650016_233=-87.7402 ,c616650016_234=-84.2635 ,c616650016_235=-101.2614 ,c616650016_236=-98.8672 ,c616650016_237=-85.9641 ,c616650016_238=-85.6808 ,c616650016_239=-107.0121 ,c616650016_240=-82.3681 ,c616650016_241=-83.425 ,c616650016_242=-99.803 ,c616650016_243=-83.1252 ,c616650016_244=-81.3753 ,c616650016_245=-101.5714 ,c616650016_246=-104.1779 ,c616650016_247=-98.626 ,c616650016_248=-98.5224 ,c616650016_249=-82.3227 ,c616650016_250=-106.2053 ,c616650016_251=-98.2528 ,c616650016_252=-89.3566 ,c616650016_253=-96.4589 ,c616650016_254=-92.8148 ,c616650016_255=-97.8835 ,c616650016_256=-82.4916 ,c616650016_257=-94.155 ,c616650016_258=-84.6624 ,c616650016_259=-102.2291 ,c616650016_260=-82.0834 ,c616650016_261=-81.2337 ,c616650016_262=-96.0698 ,c616650016_263=-96.8074 ,c616650016_264=-98.3585 ,c616650016_265=-81.509 ,c616650016_266=-88.9409 ,c616650016_267=-98.2379 ,c616650016_268=-80.374 ,c616650016_269=-90.9045 ,c616650016_270=-80.2478 ,c616650016_271=-99.7055 ,c616650016_272 = -100.234;
+
+
+update A_L_CELL_SDU_ATD_h set fddv3_eutrancellfdd='1' where me='13832a8c-a3b1-4fc1-ae86-61e494b003a3' and fddv3_enbfunction='20739' and fddv3_eutrancellfdd= '101' and collecttime>='2021-01-30 00:00:00';
+update A_L_CELL_SDU_ATD_h set fddv3_eutrancellfdd='1' where me='1c198c6c-0903-46ce-9e80-ce8377bc8b6f' and fddv3_enbfunction='20743' and fddv3_eutrancellfdd= '101' and collecttime>='2021-01-30 00:00:00';
+update A_L_CELL_SDU_ATD_h set fddv3_eutrancellfdd='1' where me='2c72eac7-129e-497f-b7b9-93e6a83bc0e9' and fddv3_enbfunction='20700' and fddv3_eutrancellfdd= '101' and collecttime>='2021-01-30 00:00:00';
+update A_L_CELL_SDU_ATD_h set fddv3_eutrancellfdd='1' where me='3355ff69-03eb-44bc-9167-6f8f8696082b' and fddv3_enbfunction='20631' and fddv3_eutrancellfdd= '101' and collecttime>='2021-01-30 00:00:00';
+update A_L_CELL_SDU_ATD_h set fddv3_eutrancellfdd='1' where me='477e9723-e694-419e-82b5-671278cde610' and fddv3_enbfunction='20683' and fddv3_eutrancellfdd= '101' and collecttime>='2021-01-30 00:00:00';
+update A_L_CELL_SDU_ATD_h set fddv3_eutrancellfdd='1' where me='6d4871a1-ca6d-424d-878c-bd1078f052d4' and fddv3_enbfunction='20733' and fddv3_eutrancellfdd= '101' and collecttime>='2021-01-30 00:00:00';
+update A_L_CELL_SDU_ATD_h set fddv3_eutrancellfdd='1' where me='a1d8c89f-9d72-4e04-a539-878b12a405e3' and fddv3_enbfunction='20815' and fddv3_eutrancellfdd= '101' and collecttime>='2021-01-30 00:00:00';
+update A_L_CELL_SDU_ATD_h set fddv3_eutrancellfdd='1' where me='a5d15546-bda3-43bf-84ef-4e616287d5b7' and fddv3_enbfunction='20680' and fddv3_eutrancellfdd= '101' and collecttime>='2021-01-30 00:00:00';
+update A_L_CELL_SDU_ATD_h set fddv3_eutrancellfdd='1' where me='a880a27e-ba81-4303-9eb0-a804db1c7f95' and fddv3_enbfunction='20674' and fddv3_eutrancellfdd= '101' and collecttime>='2021-01-30 00:00:00';
+update A_L_CELL_SDU_ATD_h set fddv3_eutrancellfdd='1' where me='ad7e82e0-ac2e-4863-87e8-ddb1e498ed2b' and fddv3_enbfunction='20818' and fddv3_eutrancellfdd= '101' and collecttime>='2021-01-30 00:00:00';
+
+
+CREATE TABLE IF NOT EXISTS "nii_pmdata" ("subnetworkid" TEXT, "managedelementid" TEXT, "ne" TEXT, "nrradioinfrastructureid" INTEGER, "nrphysicalcellduid" INTEGER, "ducellid" INTEGER, "cellid" INTEGER, "gnbid" BIGINT, "gnbidlength" INTEGER, "gnbplmn" TEXT,"starttime" TEXT,"c616650016_0" DOUBLE PRECISION) WITH ("appendonly" = TRUE,"orientation" = "column","compresstype" = "zlib","compresslevel" = 2,"blocksize" = 65536) DISTRIBUTED BY ("starttime")
+##
+##alter table if exists nii_pmdata add column if not exists day text
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE IF EXISTS nii_pmdata ADD COLUMN provincecode INTEGER;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column provincecode already exists in nii_pmdata.';
+        END;
+    END;
+$$
+##
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE IF EXISTS nii_pmdata ADD COLUMN day TEXT;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column day already exists in nii_pmdata.';
+        END;
+    END;
+$$
+##
+delete from nii_pmdata where to_date(starttime,'yyyy-MM-dd hh24:mi:ss') <  (current_date - interval '15 day')
+##
+commit
+##
+
+
+
+
+
