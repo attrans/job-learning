@@ -81,7 +81,9 @@ linux command:
 	chown root file/dir
 	chown root: file/dir
 	chown user1:group1 file/dir
-	vi, lineIndex + shift + G, gg, :$ 跳到文件最后一行, :0或:1 跳到文件第一行, :n 就可以定位到任意行n
+	vi
+		lineIndex + shift + G, gg, :$ 跳到文件最后一行, :0或:1 跳到文件第一行, :n 就可以定位到任意行n
+		d + shift + G: 全部删除
 	wc -l xxxx.csv
 	ls | wc -l
 	lsof -n|grep u31 -> 查看句柄
@@ -92,6 +94,7 @@ linux command:
 	rename -v 's/img_(\d{4})\.jpeg/dan_$1.jpg/' *.jpeg
 	/etc/hosts
 	/root/.ssh/known_hosts
+	top
 	ps -ef
 	kill -3 pidxxx
 	测试ip端口:
@@ -108,6 +111,21 @@ linux command:
 	tar cvzf xxx.tar.gz a.log b.log c.log d*.log
 	chown pict:pict xxx.tar.gz
 	命令嵌套: cp `find . -name *.csv` /home/ubuntu/csv
+	
+	sftp -P 22 aisftp@10.124.163.133
+	telnet <ip_address> <port_number>
+	telnet <domain_name> <port_number>
+	nc -vz <host> <port_number>
+	nc -vz <domain> <port_number>
+	nmap -p <port_number> <ip_address>
+	nmap -p <port_number> <domain_name>
+	
+	jar -xvf test.jar
+	jar -cvf test.jar ./dir1
+	
+	lsof -n|awk '{print $2}'|wc -l //查看打开句柄总数
+	ps -ef | grep xxx
+	lsof -p {pid} |grep netlink | wc -l //查看netlink连接数量
 	
 
 kafka command:
@@ -134,6 +152,7 @@ docker/k8s command:
 	docker logs -f -t --since="2021-06-10T10:36:00" --tail=100 CONTAINER_ID
 	docker logs --since 30m CONTAINER_ID
 	docker logs CONTAINER_ID > xxx.log
+	docker logs -f：可以监控heap
 	
 	docker ps|grep xxx
 	docker run -d yyy
@@ -153,6 +172,11 @@ docker/k8s command:
 		kubectl cp my-file my-pod:my-file -c my-container-name
 			kubectl get pods -n ranoss | grep nia-qualcommon-service | awk '{print $1}' | xargs -i kubectl cp ranoss/{}:/home/zenap/ume-log/nia-qualcommon-service-ms/ ./tmp -c nia-qualcommon-service-sl
 			kubectl get pods -n ranoss | grep nia-qualcommon-service | awk '{print $1}' | xargs -i kubectl cp ranoss/{}:/home/zenap/ume-log/nia-qualcommon-service-ms/nia-qualcommon-service.log ./tmp/nia-qualcommon-service.log -c nia-qualcommon-service-sl
+	
+	// 使用kubectl replace重启pod
+	kubectl get pod xxx_pod_name -n xxx_namespace -o yaml | kubectl replace --force -f -
+	// 使用kubectl删除pod, 自动新建
+	kubectl delete pod xxx_pod_name -n xxx_namespace
 
 wget/curl command:
 	wget -qO- "http://127.0.0.1:8080/api/iom-model/v1/iomservicelist"
