@@ -1,0 +1,27 @@
+docker run.sh 配置
+容器内有一个/home/zenap/dump目录, 如果内存溢出, 会自动dump出内存占用
+可以使用linux命令dump: 
+	1. top命令查看进程占用, 查找java/openjdk进程pid
+	2. kill -3 pid, 即触发dump操作
+	3. dump目录下出现.phd文件和.txt文件
+
+导出dump文件, 利用HeapAnalyzer工具打开查看/分析
+java -jar xx.jar打开
+
+
+分析OOM问题, 如果是单步操作引起的, 分析定位较为简单:
+确定OOM时间点(看日志, 看环境性能监控), 根据微服务日志分析当时所做的操作 + 查看dump日志对应时间点的日志, Current thread, thread details, memory等信息, 再结合代码分析定位
+如果准确的dump文件, phd文件等, 可以使用dump文件分析工具分析, MemoryAnalyzer
+
+dump文件的大小一般和当时占用的内存一样大, 内存的快照
+
+*.phd （内存堆栈文件）分析工具 之一--ha457.jar
+
+官方介绍  ：https://www.ibm.com/support/pages/ibm-heapanalyzer
+
+下载地址：  https://public.dhe.ibm.com/software/websphere/appserv/support/tools/HeapAnalyzer/ha457.jar
+
+使用方法：java -Xmx2g -jar ha457.jar  注意最大内存的填写。理论上要比dump内存大
+
+
+arthas
