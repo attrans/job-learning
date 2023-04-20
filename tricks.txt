@@ -340,6 +340,8 @@ private final String RESOURCE_PATH = System.getProperty("user.dir") + File.separ
             "main" + File.separator + "resources";
 private final String TEST_RESOURCE_PATH = System.getProperty("user.dir") + File.separator + "src" + File.separator +
             "test" + File.separator + "resources";
+			
+System.getProperty("os.name").toLowerCase().contains("windows")
 
 后端分页:
 sql
@@ -954,18 +956,68 @@ File类是可以兼容不同的文件系统的
 
 使用PreparedStatement, 可以防止收到sql注入攻击, 但是无法避免sql语句的执行. 如果判断sql注入的标准是"构造存在sql注入的参数, 最终有sql执行, 而不看最终sql的是否真实存在sql注入问题", 那么还是要使用类似"过滤输入内容，校验字符串"的方式来提前拦截sql语句的执行.
 
+# any(column for column in [...])
+# any(sleep_cell_result_df[column] for column in [...])
+# any((value for value in sleep_cell_result_df[column].to_list()) for column in [...])
+# any(any(value in [...] for value in sleep_cell_result_df[column].to_list()) for column in [...])
+if any(any(value in ["是", "否"] for value in sleep_cell_result_df[column].to_list()) for column in ["not_on_service", "has_no_user"]):
+	raise Exception("sleep_cell_identification_lte: not_on_service and has_no_user Value not valid")
+if any(value in SLEEP_CELL_DESC_ZH_LIST for value in sleep_cell_result_df["celltype"].to_list()):
+	raise Exception("sleep_cell_identification_lte: celltype Value not valid")
+
+PowerMock + JFakeFrame:
+1. 最外层的@RunWith(PowerMockRunner.class)，决定了整个Test类的执行是在PowerMock的包装之内的，所以test内部可以用PowerMock来mock一些工具类的行为（其实也可以mock一些比如Inject注入类的service的行为，但是JFF的使用建议是整个Test类只有一个全局的JFF，mock的service行为只能有一种，无法适应多个test中不同的mock）
+2. JFF通过new需要fake的注入类的子类（继承原来的类），fake子类重写注入类的protected和public方法，定义预期的fake的多种行为（可以通过方法参数，增加额外类成员变量或者构造方法参数等，通过if/else等条件语句，针对不同的test场景，定义不同的预期结果）
+3. final JFakeFrame fakeFrame = JFakeFrameBuilder.hK2Builder()
+                .addFake(XxxService.class, fakeXxxService)
+				...
+                .build();
+4. 如果当前被测试类是被@Service注解的：
+CurrentTestService currentTestService = fakeFrame.getService(CurrentTestServiceImpl.class);
+currentTestService.xxxMethod();
+5. 如果当前类不是被@Service注解的：
+CurrentTestService currentTestService = new CurrentTestServiceImpl();
+此时，前面fakeFrame里面fake的类的行为还是有效的，可以理解为当前被测试类去IOC容器中获取(此时可能是通过applicationContext.getBean(serviceClazz)或者ServiceLocatorHolder.getLocator().getService来获取的)类的实例的时候，IOC容器中的实例， 已经是被JFF fake过的实例了
 
 
+OOM会有dump日志，k8s杀掉容器，没有dump日志
+k8s杀容器，什么策略？健康度检查/内存监控（多长时间保持多高占用）？
+
+private final Map<String, XssfDataType> dataTypeMap = ImmutableMap.<String, XssfDataType>builder()
+                .put("b", XssfDataType.BOOL)
+                .put("e", XssfDataType.ERROR)
+                .put("inlineStr", XssfDataType.INLINE_STRING)
+                .put("s", XssfDataType.SST_STRING)
+                .put("str", XssfDataType.FORMULA)
+                .build();
 
 
+switch-case圈复杂度优化：
+策略枚举
+map+Function函数式接口
+
+FileOutputStream读取已存在的文件，一定要append: true才能追加写
+尽量不要在文件流后面使用file.length == 0来对文件判空，可能会有问题
+FileOutputStream打开文件时，如果文件的父目录不存在，打开会抛异常，所以要保证目录必须存在，文件可以不存在
+
+jackson反序列化子类，会解析出父类的属性，但是解析结果直接用log打印子类，只能看到子类的属性，不要被误导
+可以使用@ToString(callSuper = true)注解
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+
+使用SXSSFWorkbook处理excel大文件
+// 使用完，在finally处理掉磁盘临时文件
+private static void disposeWorkbook(Workbook workbook) {
+	if (workbook instanceof SXSSFWorkbook) {
+		((SXSSFWorkbook) workbook).dispose(); 
+	}
+}
+
+//使用sax事件驱动api解析处理excel大文件
 
 
-
-
-
-
-
-
+使用输出流写文件之前，写判断父目录是否存在，不存在是否需要创建文件夹
 
 
 
