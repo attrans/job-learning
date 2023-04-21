@@ -1,0 +1,174 @@
+<button type="button" class="plx-btn plx-btn-xs" placement="top" [disabled]="disabled" (click)="mockClickInput(inputOfImport)">{{'IMPORT' | translate}}</button>
+
+<input #inputOfImport hidden type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+(change)="import($event)" />
+
+...
+
+
+mockClickInput(inputRef) {
+	inputRef.click();
+
+}
+
+import($event) {
+	let file = this.getChosenFile($event);
+	if (!file) {
+		return;
+	}
+
+	this.importing = true;
+	let validateResult = this.validateFile(file);
+
+	if (!validateResult) { // file is not csv or excel
+		this.setFeedbackToError(this.translate.instant('IMPORT_ERROR_TIP'));
+
+		$event.target.value = ''; //if not clear, choose same file again wont work
+		this._tableLoading = false;
+		this.importing=false;
+	} else if (file['size'] > maxFileSize) { // file size is too large
+		this.setFeedbackToError(this.translate.instant('MAX_FILE_SIZE'));
+
+		$event.target.value = ''; //if not clear, choose same file again wont work
+		this._tableLoading = false;
+		this.importing=false;
+	} else { //begin to read file
+		this.fileName = file.name;
+		this.currentState = IMPORTING;
+
+		this.appService.importSysU31Data(file).subscribe((data) => {
+			if (data.code == '0') {
+				this.currentState = FINISHED_WITH_ALL_SUCCEED;
+				this._tableLoading = true;
+				this.readData()
+			}
+			else if(data.message){
+				this.setFeedbackToError(data.message)
+			}
+			else{
+				this.currentState = FINISHED_WITH_FAILED;
+			}
+			this.importing = false;
+
+		});
+		$event.target.value = '';
+	}
+}
+
+private getChosenFile($event) {
+	let file;
+	// jian rong Firefox
+	if ($event && $event.srcElement && $event.srcElement.files[0]) {
+		file = $event.srcElement.files[0];
+	} else if ($event && $event.target && $event.target.files[0]) {
+		file = $event.target.files[0];
+	}
+
+	return file;
+}
+
+private validateFile(file) {
+	if (!!!file) {
+		return false;
+	}
+	let filename = file.name;
+	let fileType = filename.substring(filename.lastIndexOf(".") + 1);
+	if (!!!(file.type) && (file.type.includes('xlsx') || file.type.includes('xls'))) {
+		return true;
+	}
+	else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+		&& file.type === 'application/vnd.ms-excel') {
+		return true;
+	}
+	else if (fileType === 'xlsx' || fileType === 'xls') {
+		return true;
+	}
+
+
+
+	return false;
+}
+
+private clearResetFeedbackAreaTimer() {
+	!!(this.resetFeedbackAreaTimer) ? clearTimeout(this.resetFeedbackAreaTimer) : null;
+}
+
+private setFeedbackToError(msg: string) {
+	this.currentState = ERROR;
+	this.errorMsg = this.translate.instant('upload_error')+","+msg;
+	this.clearResetFeedbackAreaTimer();
+	this.resetFeedbackAreaTimer = setTimeout(() => {
+		this.currentState = INIT;
+	}, 5000);
+}
+
+
+...
+
+
+@POST
+@Consumes(MediaType.MULTIPART_FORM_DATA)
+@ApiOperation(value = "importEpFile", tags = {ApiType.UI})
+@Produces("application/json;charset=utf-8")
+@Path("/ep")
+public ResponseWrapper importEpFile(@FormDataParam("file") InputStream inputStream,
+									@FormDataParam("file") FormDataContentDisposition fileMetaData,
+									@Context HttpServletRequest request) {
+	String lang = getLan(request);
+	String username = request.getHeader("username");
+	log.info("begin to import EP file");
+
+	String msg = getCheckMsg(fileMetaData, lang);
+	if (msg != null) {
+		return new ResponseWrapper("1", msg);
+	}
+
+	String importTmpDir = getImportFileTmpDir();
+	if (importTmpDir == null) {
+		return new ResponseWrapper("1", "get temp dir error!");
+	}
+
+	File targetFile = FileUtil.createFile(importTmpDir + File.separator + getImportFileName(fileMetaData.getFileName()));
+	if (!copy(inputStream, targetFile)) {
+		return new ResponseWrapper("1", "copy file error!");
+	}
+
+	try {
+		File f = u31EpService.importEpExcel(targetFile, lang, username);
+		if (f != null) {
+			return new ResponseWrapper("1", null);
+		}
+		return new ResponseWrapper();
+	} catch (Exception exp) {
+		ResponseWrapper responseWrapper = new ResponseWrapper("1", exp.getMessage());
+		return responseWrapper;
+	}
+}
+	
+public File importEpExcel(File file, String lan, String username) throws ParamterException {
+        epExcelImportExportLock.lock();
+
+	try {
+		// 1.check file meta data
+		checkFileMetaData(file, lan);
+
+		// 2. check file content data,return error file if exists.
+		try {
+			File errorFile = checkFileContent(file, lan);
+			if (errorFile != null) return errorFile;
+		} catch (IOException e) {
+			log.error("check file content exception!", e);
+			throw new ParamterException("check file content exception!");
+		}
+
+		// 3. write excel to csv
+		writeExcelToCsv(file, username);
+		return null;
+	} finally {
+		epExcelImportExportLock.unlock();
+		if (file.exists()) {
+			deleteFile(file);
+		}
+	}
+
+}
