@@ -1020,7 +1020,38 @@ private static void disposeWorkbook(Workbook workbook) {
 使用输出流写文件之前，写判断父目录是否存在，不存在是否需要创建文件夹
 
 
+docker启动，需要shell脚本，shell脚本配置参数和加载项等
 
+
+容器化、云化后无线UME产品使用CPaaS、TCF对应用进行生命周期管理（安装、升级、运维），应用的资源规划也就落到运行实例的资源限额上。oki使用spd、resource、蓝图文件，通过与平台交互完成应用的各项参数配置和部署。
+实验室、外场频繁出现内存配置不合理引发的重启故障或自运维性能阈值超限告警误报。出问题后常见操作是直接上调limit值重新部署应用规避。但该类故障绝大部分的容器内存limit充足，根源是堆内存、非堆内存比率配置不合理导致，上调limit的规避方式加重了内存的浪费，同时因扩大内存区域不精准可能换来的只是相对短期的稳定。
+
+应用运行期间，容器借助Cgroup对内存使用做严格限制，如果内存的配置比例不合理或者资源评估不准确则会引发如下问题：OOM Kill（内存使用超限），OutOfMemroy（内存溢出，堆内存溢出最为常见）
+
+基于上述背景，建议将堆内存的配置参数提成蓝图变量，带来的收益也相对明显：
+	研发阶段：基于业务指标进行微服务压力测试，迭代优化该阈值时不需每次调整代码或脚本，帮助团队高效完成资源评估；
+	商用阶段：无需重新发布补丁，降低故障的响应时间。
+
+引入$MAX_DUMP_SIZE，和$DEFAULT_MAX_DUMP_RATIO
+直接使用框架脚本，根据堆内存上限根据容器内存limit的获得：不大于256Mb取limit*0.75、不大于1024Mb取limit*0.85、大于1024Mb取limit*0.9。
+
+需要重点关注的内存区域：
+	Java堆(新生代和老年代) +Java方法区（元空间-加载class、code） ＋ 线程栈 ＋ Java 直接内存 +  jvm自身使用（GC（与总内存有关）、命令行、编译器）+ 共享库（加载lib）+本地方法空间
+
+估算公式：
+	容器limit = 最大堆[-Xmx] + 元空间最大实际使用 + number_of_threads * [-Xss]+ 直接内存最大实际使用 + GC占用 + JIT缓存 +other（一般的这部分不会很大）+ cache
+	
+
+yml配置http请求的Content-Length长度(上传下载大文件)：
+contentLengthLimitConf:
+  defaultLimit: 2097152 #表示此服务所有请求的默认最大content-length为2097152字节
+  defaultLowerLimit: -1 #表示此服务所有请求的默认最小不做限制
+  limits:
+  - api: /api/xxx/v1/xxx
+    limit: 1024 #表示对应url请求的最大content-length为1024字节
+    lowerLimit：1 #表示对应url请求的最小content-length为1字节
+  - api: /api/xxx/v1/xxx
+    limit: -1 #表示对应url请求的content-length不做限制
 
 
 
