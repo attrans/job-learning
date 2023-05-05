@@ -145,6 +145,83 @@ commit
 ##
 
 
+gp 登陆: 
+
+登陆到controler节点：
+curl -X GET http://193.168.0.2:10081/api/msdiscover/v1/services/greenplum-master-srv/version/v1?namespace=ranoss
+
+查到ip
+
+ssh 到对应ip
+
+执行：
+
+sudo su gpadmin
+
+psql -d pm
+
+
+
+GP: http://i.zte.com.cn/#/space/770bfa7a77e74ac6b4dc57d0b34abfaf/wiki/page/1c2ad22c0eff499bb7a79259c34102be/view
+
+Gbase：http://i.zte.com.cn/#/space/770bfa7a77e74ac6b4dc57d0b34abfaf/wiki/page/5a0e282efc3e406087d3408704db334a/view
+
+要点Gbase：
+
+1）  ssh controller-ip  （user/password:ubuntu/cloud）
+
+2）  su root
+
+3）  ssh   ubuntu@gbase-ip   
+
+注意,容器化的gbase 此处需要进入容器 
+
+       3.1)  docker ps | grep gbase-gclu  
+
+       3.2)  docker exec  -it   gbasecontainer-uuid   /bin/sh
+
+4）  su root
+
+5)    gccli -uiom -pume_IOM_2018 或  gccli -upm -ppm
+
+
+
+
+要点GP
+
+1）ssh controller-ip  （user/password:ubuntu/cloud）
+
+2）到/root/paas-result.json 中看 gp master ip
+
+3) ssh ubuntu@gp master ip
+
+4) sudo su gpadmin
+
+5)psql -d pm
+
+
+
+如何进入PGSQL和导出对应表数据
+http://i.zte.com.cn/#/space/770bfa7a77e74ac6b4dc57d0b34abfaf/wiki/page/67618815bc194334a410995200b91388/view
+
+要点：
+
+登录http://ip/portaladmin，账号admin，密码PaaS1!2@3#4$(不对的话问环境维护者)，找到pg的节点(pg-ip)
+
+ ssh ubuntu@pg-ip
+
+ sudo su
+
+docker ps|grep pg- （注意commsrv_pg_vnpm_server的那个的pg-uuid， k8s_commsrvpg_commsrvpg-dd79e8b8-8743-4964-a14d-41a5a6eef486-1_opcs_5c560cd5-bcc9-11e9-b5ec-fa163eefd172_1）获取pg-uuid    
+
+docker exec -it   pg-uuid bashimage.png
+
+su - postgres
+
+psql  
+
+\c db_3c047c89308e4b4bb50f95fc7fcae42e(https://ip /portal  服务市场-dbname)
+
 
 
 
