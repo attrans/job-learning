@@ -13,7 +13,7 @@
 producer发布的消息会放在服务器端topic的partition下，其中partition里的消息是有序的（可通过key-value控制），用（服务器端）offset标识。
 
 topic、partition和producer
-image.png
+
 
 
 consumer必须得放在一个group里，同一个group中的consumer会消费不同的partition（无重复消费），不同的group之间消费的消息预期是一样的（重复消费）。
@@ -21,16 +21,13 @@ consumer必须得放在一个group里，同一个group中的consumer会消费不
 ps：引入group的概念可以做到消息广播和单点传播的切换：多个group（单consumer），就是简单的群发。单个group（多个consumer）就是点对点传输、支持并发。
 
 consumer group
-image.png
 
 
 consumer和分区是1：n的关系，如果分区被分配完了，会存在空闲的consumer。consumer、partition发生改变时会触发相关消费组的rebalance。
 
 consumer 1：n partition
-image.png
 
 空闲的consumer
-image.png
 
 
 offset有本地和服务端(committed offset)之分，有可能出现不一致的情况，这时候会依据配置的策略将offset统一，本地提交offset可以设置为手动。
@@ -50,15 +47,12 @@ auto.offset.reset
 
 consumer保活
 心跳
-image.png
 poll间隔
-image.png
 
 
 UME创建topic后默认的partition数量是对应kafka实体replica数目*2，可以调用kafka的api或在自管理界面重新分配partition。
 
 kafka服务
-image.png
 
 
 3. 故障相关
@@ -70,11 +64,9 @@ image.png
 临时consumer
 ----图中代码直接调用了consumer的构造函数，建议还是使用otcp包装的kafka接口创建consumer，otcp的防腐层做的还是有必要的：
 
-image.png
 
 ----用完即关：
 
-image.png
 
     但是这种方式有一个问题，通过观察多个环境的日志发现：consumer创建以及(re)joinning分组成功需要3秒，假如在这3秒内kafka服务器端的分区已经收到100%进度的消息了，那么客户端就不会消费它了，因为默认策略auto.offset.reset=latest，客户端的consumer初始化后（新consumer group）的offset取服务器端的最新值。
 
@@ -85,12 +77,10 @@ image.png
 全局consumer
 ----进程启动的时候创建consumer，不关闭。每个实例对应一个consumer，分组固定一个，poll的消息放入缓存，保证不会被服务器端认为失效
 
-image.png
 
 
 
 多线程消费常用策略
-image.png
 3.2 多个Kafka服务端实体
     UME部署的时候，如果规模增大，可能会出现多个kafka实体，此时代码层面的应对可能没对上，导致bug。具体可参考王飞的帖子：https://media-moa.zte.com.cn/mpp_fs/MsgView?msgId=e5afce666287bb962f2dcd02a2f6a92dac11e9684d76dcf6&_v=221
 
@@ -100,7 +90,6 @@ image.png
 服务器端的消息存在时间超过log.retention.hours（默认168小时=7天）将会被删除。此时如果客户端consumer的offset仍然小于被删消息的offset（相当于消息在服务器端放了7天还未被消费。。），此时offset会按照参数auto.offset.reset重新设值并统一，不管是earliest（log文件中未删除消息中最早的）或者latest（最新的），都已经出现了消息“丢失”。
 
 本地offset和远端offset对不上触发reset
-image.png
 
 
 某客户端消费较慢（外场遇到过一个异常场景：死锁），超过了poll的间隔限制max.poll.interval.ms，服务器端认为该consumer已失效，触发rebalance试图重新分配分区到consumer，但是很多时候应用代码那里就起了一个consumer，所以就没有可分配的了，造成消息“丢失”。
@@ -116,13 +105,10 @@ auto.offset.reset被设置成earliest，当新起消费组的时候，会重新�
 ps：分区的数目理论上越多（理想是某组内consumer数量 1:1 分区数）吞吐量越大，但是同时也增加了系统的消耗。所以这个配置需要压力测试去调参，或者依UME的规模分级设置
 
 kafka自管理界面分区重设
-image.png
 OTCP kafka client创建topic、配置分区API
-image.png
 假如现场offset乱掉了导致故障，可以使用kafka自管理或cmd命令重置对应partition & consumer group的committed offset
 
 tool cmd
-image.png
 
 
 URL：https://cwiki.apache.org/confluence/display/KAFKA/KIP-122%3A+Add+Reset+Consumer+Group+Offsets+tooling
@@ -131,7 +117,7 @@ URL：https://cwiki.apache.org/confluence/display/KAFKA/KIP-122%3A+Add+Reset+Con
 kafka自管理
 先停掉consumer group 相关服务，红框按钮就可以点击了：
 
-image.png
+![Uploading image.png…]()
 
 
 
