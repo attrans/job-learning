@@ -1054,5 +1054,28 @@ contentLengthLimitConf:
     limit: -1 #表示对应url请求的content-length不做限制
 
 
+element.style {
+    display: flex;
+    /* line-height: 1.3; */
+    /* justify-content: flex-end; */
+    white-space: nowrap;
+    /* text-overflow: ellipsis; */
+    justify-content: flex-end;
+}
+
+element.style {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* text-align: right; */
+}
+
+
+java -cp "D:\dependency\*;D:\demo.jar" com.app.HelloWorldApplication
+
+
+/etc/nginx/conf
+/etc/nginx/logs
+
+
 
 
